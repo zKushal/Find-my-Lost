@@ -1,0 +1,154 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isDocOwner() {
+      return isAuthenticated() && request.auth.uid == resource.data.userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && 
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' || 
+        (request.auth.token.email == "kushalbhandari803@gmail.com" && request.auth.token.email_verified == true));
+    }
+
+    function uidUnchanged() {
+      return !('userId' in request.resource.data) || request.resource.data.userId == request.auth.uid;
+    }
+
+    function uidNotModified() {
+      return !('userId' in request.resource.data) || request.resource.data.userId == resource.data.userId;
+    }
+
+    function hasRequiredFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
+    }
+
+    function hasOnlyAllowedFields(fields) {
+      return request.resource.data.keys().hasOnly(fields);
+    }
+
+    function validStringLength(field, minLen, maxLen) {
+      return request.resource.data[field] is string &&
+        request.resource.data[field].size() >= minLen &&
+        request.resource.data[field].size() <= maxLen;
+    }
+
+    function isValidEmail(email) {
+      return email is string &&
+        email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+
+    // ===============================================================
+    // Domain Validators
+    // ===============================================================
+    function isValidUser(data) {
+      return hasOnlyAllowedFields(['uid', 'email', 'name', 'role', 'createdAt']) &&
+             data.uid is string && data.uid.size() > 0 && data.uid.size() < 100 &&
+             data.email is string && isValidEmail(data.email) &&
+             data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
+             data.role in ['user', 'admin'] &&
+             data.createdAt is timestamp;
+    }
+
+    function isValidItem(data) {
+      return hasRequiredFields(['userId', 'type', 'category', 'description', 'locationFromLat', 'locationFromLng', 'timeFrom', 'status', 'createdAt']) &&
+             data.userId is string && data.userId.size() > 0 && data.userId.size() < 100 &&
+             data.type in ['lost', 'found'] &&
+             data.category in ['electronics', 'wallet', 'person', 'keys', 'clothing', 'jewelry', 'pets', 'bags', 'other'] &&
+             (!('brand' in data) || data.brand == null || (data.brand is string && data.brand.size() < 100)) &&
+             (!('model' in data) || data.model == null || (data.model is string && data.model.size() < 100)) &&
+             (!('color' in data) || data.color == null || (data.color is string && data.color.size() < 50)) &&
+             (!('serialNumber' in data) || data.serialNumber == null || (data.serialNumber is string && data.serialNumber.size() < 100)) &&
+             (!('reward' in data) || data.reward == null || data.reward is number) &&
+             (!('contactNumber' in data) || data.contactNumber == null || (data.contactNumber is string && data.contactNumber.size() < 20)) &&
+             data.description is string && data.description.size() > 0 && data.description.size() < 5000 &&
+             data.locationFromLat is number &&
+             data.locationFromLng is number &&
+             (!('locationToLat' in data) || data.locationToLat == null || data.locationToLat is number) &&
+             (!('locationToLng' in data) || data.locationToLng == null || data.locationToLng is number) &&
+             data.timeFrom is string && data.timeFrom.size() > 0 && data.timeFrom.size() < 50 &&
+             (!('timeTo' in data) || data.timeTo == null || (data.timeTo is string && data.timeTo.size() > 0 && data.timeTo.size() < 50)) &&
+             (!('photoData' in data) || data.photoData == null || (data.photoData is string && data.photoData.size() < 900000)) && // Max ~900KB base64
+             (!('videoData' in data) || data.videoData == null || (data.videoData is string && data.videoData.size() < 900000)) && // Max ~900KB base64
+             data.status in ['pending', 'approved', 'rejected', 'matched'] &&
+             data.createdAt is timestamp &&
+             (!('updatedAt' in data) || data.updatedAt == null || data.updatedAt is timestamp);
+    }
+
+    function isValidMatch(data) {
+      return hasOnlyAllowedFields(['lostItemId', 'foundItemId', 'matchScore', 'status', 'createdAt']) &&
+             data.lostItemId is string && data.lostItemId.size() > 0 && data.lostItemId.size() < 100 &&
+             data.foundItemId is string && data.foundItemId.size() > 0 && data.foundItemId.size() < 100 &&
+             data.matchScore is number && data.matchScore >= 0 && data.matchScore <= 100 &&
+             data.status in ['pending', 'confirmed', 'rejected'] &&
+             data.createdAt is timestamp;
+    }
+
+    function isValidNotification(data) {
+      return hasRequiredFields(['userId', 'message', 'read', 'type', 'createdAt']) &&
+             data.userId is string && data.userId.size() > 0 && data.userId.size() < 100 &&
+             data.message is string && data.message.size() > 0 && data.message.size() < 1000 &&
+             data.read is bool &&
+             data.type in ['match_found', 'system'] &&
+             (!('matchId' in data) || (data.matchId is string && data.matchId.size() > 0 && data.matchId.size() < 100)) &&
+             data.createdAt is timestamp;
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isAuthenticated() && isValidUser(request.resource.data) && 
+                    isOwner(userId) && uidUnchanged() && 
+                    (request.resource.data.role == 'user' || isAdmin());
+      allow update: if isAuthenticated() && isValidUser(request.resource.data) && 
+                    ((isOwner(userId) && uidNotModified() && request.resource.data.role == resource.data.role) || isAdmin());
+      allow delete: if isAdmin();
+    }
+
+    match /items/{itemId} {
+      // Anyone can read approved items, admins can read all, owners can read their own
+      allow read: if resource.data.status == 'approved' || isAdmin() || isDocOwner();
+      
+      // Users can create items, but they must be 'pending' unless created by an admin
+      allow create: if isAuthenticated() && isValidItem(request.resource.data) && 
+                    uidUnchanged() && 
+                    (request.resource.data.status == 'pending' || request.resource.data.status == 'approved' || isAdmin());
+                    
+      // Only admins can update status or other fields of items they don't own
+      // Owners can update their items but cannot change status from pending to approved
+      allow update: if isAuthenticated() && isValidItem(request.resource.data) && uidNotModified() &&
+                    (isAdmin() || 
+                     (isDocOwner() && request.resource.data.status == resource.data.status));
+      
+      allow delete: if isAdmin() || isDocOwner();
+    }
+
+    match /matches/{matchId} {
+      allow read: if isAdmin() || (isAuthenticated() && get(/databases/$(database)/documents/items/$(resource.data.lostItemId)).data.userId == request.auth.uid);
+      allow create: if isAuthenticated() && isValidMatch(request.resource.data); // Anyone reporting a found item can trigger a match creation
+      allow update: if isAdmin() || (isAuthenticated() && get(/databases/$(database)/documents/items/$(resource.data.lostItemId)).data.userId == request.auth.uid);
+      allow delete: if isAdmin();
+    }
+
+    match /notifications/{notificationId} {
+      allow read: if isDocOwner() || isAdmin();
+      allow create: if isAuthenticated() && isValidNotification(request.resource.data); // Anyone triggering a match can create a notification for someone else
+      allow update: if isAuthenticated() && isValidNotification(request.resource.data) && uidNotModified() && isDocOwner();
+      allow delete: if isDocOwner() || isAdmin();
+    }
+  }
+}
