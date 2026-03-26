@@ -48,10 +48,18 @@ export default function ReportLost() {
   const [brand, setBrand] = useState('');
   const [model, setModel] = useState('');
   const [color, setColor] = useState('');
+  const [secondaryColor, setSecondaryColor] = useState('');
   const [contactNumber, setContactNumber] = useState('');
   const [description, setDescription] = useState('');
   const [lostLocationDescription, setLostLocationDescription] = useState('');
+  const [estimatedValue, setEstimatedValue] = useState('');
+  const [policeReportFiled, setPoliceReportFiled] = useState(false);
+  const [policeReportNumber, setPoliceReportNumber] = useState('');
   
+  const now = new Date();
+  now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+  const maxDateTime = now.toISOString().slice(0, 16);
+
   // Dynamic fields
   const [name, setName] = useState('');
   const [age, setAge] = useState('');
@@ -107,8 +115,8 @@ export default function ReportLost() {
 
       let videoData = null;
       if (video) {
-        if (video.size > 500000) {
-          toast.error('Video must be less than 500KB');
+        if (video.size > 5000000) {
+          toast.error('Video must be less than 5MB');
           setIsSubmitting(false);
           return;
         }
@@ -133,6 +141,7 @@ export default function ReportLost() {
       if (brand) itemData.brand = brand;
       if (model) itemData.model = model;
       if (color) itemData.color = color;
+      if (secondaryColor) itemData.secondaryColor = secondaryColor;
       if (contactNumber) itemData.contactNumber = contactNumber;
       if (name) itemData.name = name;
       if (age) itemData.age = age;
@@ -151,6 +160,9 @@ export default function ReportLost() {
       if (jewelryWeight) itemData.jewelryWeight = jewelryWeight;
       if (itemCondition) itemData.itemCondition = itemCondition;
       if (distinguishingFeatures) itemData.distinguishingFeatures = distinguishingFeatures;
+      if (estimatedValue) itemData.estimatedValue = parseFloat(estimatedValue);
+      itemData.policeReportFiled = policeReportFiled;
+      if (policeReportFiled && policeReportNumber) itemData.policeReportNumber = policeReportNumber;
 
       if (timeTo) itemData.timeTo = timeTo;
       if (locationTo) {
@@ -418,6 +430,18 @@ export default function ReportLost() {
                     />
                   </div>
                 </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-slate-700">Video (Optional, max 5MB)</label>
+                  <div className="relative group">
+                    <input
+                      type="file"
+                      accept="video/*"
+                      onChange={(e) => setVideo(e.target.files?.[0] || null)}
+                      className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none transition-all bg-slate-50 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-brand-orange/10 file:text-brand-orange hover:file:bg-brand-orange/20"
+                    />
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -457,6 +481,53 @@ export default function ReportLost() {
                 </div>
               </div>
 
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-slate-700">Secondary Color</label>
+                  <input
+                    type="text"
+                    className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none transition-all bg-slate-50"
+                    placeholder="e.g. Black"
+                    value={secondaryColor}
+                    onChange={(e) => setSecondaryColor(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-slate-700">Estimated Value (NPR)</label>
+                  <input
+                    type="number"
+                    className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none transition-all bg-slate-50"
+                    placeholder="e.g. 5000"
+                    value={estimatedValue}
+                    onChange={(e) => setEstimatedValue(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2 flex flex-col justify-center pt-6">
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      className="w-5 h-5 rounded border-slate-300 text-brand-orange focus:ring-brand-orange"
+                      checked={policeReportFiled}
+                      onChange={(e) => setPoliceReportFiled(e.target.checked)}
+                    />
+                    <span className="text-sm font-bold text-slate-700">Police Report Filed?</span>
+                  </label>
+                </div>
+              </div>
+
+              {policeReportFiled && (
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-slate-700">Police Report Number</label>
+                  <input
+                    type="text"
+                    className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none transition-all bg-slate-50"
+                    placeholder="e.g. PR-123456"
+                    value={policeReportNumber}
+                    onChange={(e) => setPoliceReportNumber(e.target.value)}
+                  />
+                </div>
+              )}
+
               <div className="space-y-2">
                 <label className="text-sm font-bold text-slate-700">Detailed Description</label>
                 <textarea
@@ -485,6 +556,7 @@ export default function ReportLost() {
                   <input
                     type="datetime-local"
                     required
+                    max={maxDateTime}
                     className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none transition-all bg-slate-50"
                     value={timeFrom}
                     onChange={(e) => setTimeFrom(e.target.value)}
@@ -494,6 +566,7 @@ export default function ReportLost() {
                   <label className="text-sm font-bold text-slate-700">Time Lost (To)</label>
                   <input
                     type="datetime-local"
+                    max={maxDateTime}
                     className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none transition-all bg-slate-50"
                     value={timeTo}
                     onChange={(e) => setTimeTo(e.target.value)}

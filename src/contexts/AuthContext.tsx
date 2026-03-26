@@ -7,8 +7,15 @@ interface UserProfile {
   uid: string;
   email: string;
   name: string;
+  phone?: string;
+  avatarUrl?: string;
   role: 'user' | 'admin';
   createdAt: any;
+  notifications?: {
+    emailOnApproval: boolean;
+    emailOnMatch: boolean;
+    inAppNotifications: boolean;
+  };
 }
 
 interface AuthContextType {

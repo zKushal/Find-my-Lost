@@ -69,6 +69,9 @@ export default function Navbar() {
                     <ShieldAlert className="w-4 h-4" /> Admin
                   </Link>
                 )}
+                <Link to="/profile" className="text-slate-600 hover:text-brand-orange font-medium transition-colors">
+                  Profile
+                </Link>
                 <Notifications />
                 <button onClick={handleLogout} className="text-slate-600 hover:text-red-600 font-medium flex items-center gap-1 p-2 rounded-lg hover:bg-slate-100 transition-colors">
                   <LogOut className="w-5 h-5" />

@@ -54,6 +54,7 @@ export default function EditItem() {
   const [brand, setBrand] = useState('');
   const [model, setModel] = useState('');
   const [color, setColor] = useState('');
+  const [secondaryColor, setSecondaryColor] = useState('');
   const [contactNumber, setContactNumber] = useState('');
   const [description, setDescription] = useState('');
   const [foundLocationDescription, setFoundLocationDescription] = useState('');
@@ -67,6 +68,13 @@ export default function EditItem() {
   const [locationFrom, setLocationFrom] = useState<any>(null);
   const [locationTo, setLocationTo] = useState<any>(null);
   const [selectingLocation, setSelectingLocation] = useState<'from' | 'to'>('from');
+  const [estimatedValue, setEstimatedValue] = useState('');
+  const [policeReportFiled, setPoliceReportFiled] = useState(false);
+  const [policeReportNumber, setPoliceReportNumber] = useState('');
+
+  const now = new Date();
+  now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+  const maxDateTime = now.toISOString().slice(0, 16);
 
   // Dynamic fields
   const [name, setName] = useState('');
@@ -110,6 +118,7 @@ export default function EditItem() {
           setBrand(data.brand || '');
           setModel(data.model || '');
           setColor(data.color || '');
+          setSecondaryColor(data.secondaryColor || '');
           setContactNumber(data.contactNumber || '');
           setDescription(data.description);
           setFoundLocationDescription(data.foundLocationDescription || '');
@@ -122,6 +131,9 @@ export default function EditItem() {
           if (data.locationToLat && data.locationToLng) {
             setLocationTo({ lat: data.locationToLat, lng: data.locationToLng });
           }
+          setEstimatedValue(data.estimatedValue || '');
+          setPoliceReportFiled(data.policeReportFiled || false);
+          setPoliceReportNumber(data.policeReportNumber || '');
 
           // Set dynamic fields
           setName(data.name || '');
@@ -172,6 +184,11 @@ export default function EditItem() {
       return;
     }
 
+    if (itemType === 'found' && !video && !existingVideo) {
+      toast.error('Please upload a video of the found item');
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       let photoData = existingPhoto;
@@ -186,8 +203,8 @@ export default function EditItem() {
 
       let videoData = existingVideo;
       if (video) {
-        if (video.size > 500000) {
-          toast.error('Video must be less than 500KB');
+        if (video.size > 5000000) {
+          toast.error('Video must be less than 5MB');
           setIsSubmitting(false);
           return;
         }
@@ -199,6 +216,7 @@ export default function EditItem() {
         brand,
         model,
         color,
+        secondaryColor,
         contactNumber,
         description,
         foundLocationDescription,
@@ -208,7 +226,10 @@ export default function EditItem() {
         locationFromLng: locationFrom.lng,
         updatedAt: serverTimestamp(),
         itemCondition,
-        distinguishingFeatures
+        distinguishingFeatures,
+        estimatedValue,
+        policeReportFiled,
+        policeReportNumber: policeReportFiled ? policeReportNumber : null
       };
 
       if (timeTo) itemData.timeTo = timeTo;
@@ -567,14 +588,66 @@ export default function EditItem() {
             </div>
           </div>
 
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-slate-700">Secondary Color</label>
+              <input
+                type="text"
+                className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none transition-all bg-white"
+                placeholder="e.g. Black"
+                value={secondaryColor}
+                onChange={(e) => setSecondaryColor(e.target.value)}
+              />
+            </div>
+            {itemType === 'lost' && (
+              <>
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-slate-700">Estimated Value (NPR)</label>
+                  <input
+                    type="number"
+                    className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none transition-all bg-white"
+                    placeholder="e.g. 5000"
+                    value={estimatedValue}
+                    onChange={(e) => setEstimatedValue(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2 flex flex-col justify-center pt-6">
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      className="w-5 h-5 rounded border-slate-300 text-brand-orange focus:ring-brand-orange"
+                      checked={policeReportFiled}
+                      onChange={(e) => setPoliceReportFiled(e.target.checked)}
+                    />
+                    <span className="text-sm font-bold text-slate-700">Police Report Filed?</span>
+                  </label>
+                </div>
+              </>
+            )}
+          </div>
+
+          {itemType === 'lost' && policeReportFiled && (
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-slate-700">Police Report Number</label>
+              <input
+                type="text"
+                className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none transition-all bg-white"
+                placeholder="e.g. PR-123456"
+                value={policeReportNumber}
+                onChange={(e) => setPoliceReportNumber(e.target.value)}
+              />
+            </div>
+          )}
+
           <div className="grid grid-cols-1 md:grid-cols-1 gap-8">
             <div className="space-y-2">
               <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
-                <Video className="w-4 h-4 text-slate-400" /> Video (max 500KB)
+                <Video className="w-4 h-4 text-slate-400" /> Video {itemType === 'found' ? '(Mandatory, max 5MB)' : '(max 5MB)'}
               </label>
               <input
                 type="file"
                 accept="video/*"
+                required={itemType === 'found' && !existingVideo}
                 onChange={(e) => setVideo(e.target.files?.[0] || null)}
                 className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none transition-all bg-white text-sm"
               />
@@ -614,6 +687,7 @@ export default function EditItem() {
               <input
                 type="datetime-local"
                 required
+                max={maxDateTime}
                 className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none transition-all bg-slate-50"
                 value={timeFrom}
                 onChange={(e) => setTimeFrom(e.target.value)}
@@ -626,6 +700,7 @@ export default function EditItem() {
                 </label>
                 <input
                   type="datetime-local"
+                  max={maxDateTime}
                   className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none transition-all bg-slate-50"
                   value={timeTo}
                   onChange={(e) => setTimeTo(e.target.value)}

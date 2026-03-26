@@ -16,6 +16,7 @@ import EditItem from './pages/EditItem';
 import Browse from './pages/Browse';
 import ItemDetails from './pages/ItemDetails';
 import AdminDashboard from './pages/AdminDashboard';
+import Profile from './pages/Profile';
 import { AuthProvider } from './contexts/AuthContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
@@ -37,6 +38,7 @@ export default function App() {
                 <Route path="/item/:id" element={<ItemDetails />} />
                 <Route path="/browse" element={<Browse />} />
                 <Route path="/admin" element={<AdminDashboard />} />
+                <Route path="/profile" element={<Profile />} />
               </Routes>
             </main>
             <Footer />

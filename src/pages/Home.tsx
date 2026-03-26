@@ -13,6 +13,7 @@ interface Item {
   brand?: string;
   model?: string;
   color?: string;
+  secondaryColor?: string;
   contactNumber?: string;
   description: string;
   photoData?: string;
@@ -21,6 +22,14 @@ interface Item {
   timeTo?: string;
   locationFromLat: number;
   locationFromLng: number;
+  lostLocationDescription?: string;
+  foundLocationDescription?: string;
+  itemCondition?: string;
+  distinguishingFeatures?: string;
+  estimatedValue?: string;
+  policeReportFiled?: boolean;
+  policeReportNumber?: string;
+  name?: string;
   userId: string;
   type: 'lost' | 'found';
 }
@@ -257,11 +266,15 @@ export default function Home() {
                   </div>
                   
                   <div className="space-y-3 pt-4 border-t border-slate-100">
-                    <div className="flex items-center gap-2.5 text-slate-600">
-                      <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center shrink-0">
+                    <div className="flex items-start gap-2.5 text-slate-600">
+                      <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center shrink-0 mt-0.5">
                         <MapPin className="w-4 h-4 text-slate-400" />
                       </div>
-                      <span className="text-sm font-medium">Kathmandu → Bhaktapur</span>
+                      <span className="text-sm font-medium line-clamp-2">
+                        {item.type === 'lost' 
+                          ? (item.lostLocationDescription || 'Location not specified')
+                          : (item.foundLocationDescription || 'Location not specified')}
+                      </span>
                     </div>
                     <div className="flex items-center gap-2.5 text-slate-600">
                       <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center shrink-0">
@@ -271,6 +284,35 @@ export default function Home() {
                         {item.timeFrom && format(new Date(item.timeFrom), 'MMM d, yyyy')}
                       </span>
                     </div>
+                    {(item.color || item.secondaryColor || item.name || item.itemCondition || item.estimatedValue) && (
+                      <div className="flex flex-wrap gap-2 pt-2">
+                        {item.color && (
+                          <span className="px-2.5 py-1 bg-slate-100 text-slate-600 rounded-md text-xs font-medium">
+                            Color: {item.color}
+                          </span>
+                        )}
+                        {item.secondaryColor && (
+                          <span className="px-2.5 py-1 bg-slate-100 text-slate-600 rounded-md text-xs font-medium">
+                            Sec. Color: {item.secondaryColor}
+                          </span>
+                        )}
+                        {item.name && (
+                          <span className="px-2.5 py-1 bg-slate-100 text-slate-600 rounded-md text-xs font-medium">
+                            Name: {item.name}
+                          </span>
+                        )}
+                        {item.itemCondition && (
+                          <span className="px-2.5 py-1 bg-slate-100 text-slate-600 rounded-md text-xs font-medium capitalize">
+                            Condition: {item.itemCondition}
+                          </span>
+                        )}
+                        {item.estimatedValue && (
+                          <span className="px-2.5 py-1 bg-slate-100 text-slate-600 rounded-md text-xs font-medium">
+                            Value: NPR {item.estimatedValue}
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   {user && user.uid === item.userId && (

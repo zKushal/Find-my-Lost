@@ -27,6 +27,7 @@ interface Item {
   brand?: string;
   model?: string;
   color?: string;
+  secondaryColor?: string;
   contactNumber?: string;
   description: string;
   lostLocationDescription?: string;
@@ -59,6 +60,9 @@ interface Item {
   jewelryWeight?: string;
   itemCondition?: string;
   distinguishingFeatures?: string;
+  estimatedValue?: string;
+  policeReportFiled?: boolean;
+  policeReportNumber?: string;
 }
 
 export default function ItemDetails() {
@@ -222,6 +226,12 @@ export default function ItemDetails() {
                       <p className="font-bold text-slate-900">{item.color}</p>
                     </div>
                   )}
+                  {item.secondaryColor && (
+                    <div className="space-y-1">
+                      <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Secondary Color</p>
+                      <p className="font-bold text-slate-900">{item.secondaryColor}</p>
+                    </div>
+                  )}
                   {item.name && (
                     <div className="space-y-1">
                       <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Name</p>
@@ -310,6 +320,18 @@ export default function ItemDetails() {
                     <div className="space-y-1">
                       <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Condition</p>
                       <p className="font-bold text-slate-900 capitalize">{item.itemCondition}</p>
+                    </div>
+                  )}
+                  {item.estimatedValue && (
+                    <div className="space-y-1">
+                      <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Estimated Value</p>
+                      <p className="font-bold text-slate-900">NPR {item.estimatedValue}</p>
+                    </div>
+                  )}
+                  {item.policeReportFiled && (
+                    <div className="space-y-1">
+                      <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Police Report</p>
+                      <p className="font-bold text-slate-900">Filed {item.policeReportNumber ? `(${item.policeReportNumber})` : ''}</p>
                     </div>
                   )}
                   <div className="space-y-1">
