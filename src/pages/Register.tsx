@@ -65,6 +65,11 @@ export default function Register() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (phone && !/^(98|97)\d{8}$/.test(phone)) {
+      toast.error('Please enter a valid 10-digit Nepal phone number starting with 98 or 97');
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
@@ -207,16 +212,21 @@ export default function Register() {
             </div>
             <div className="space-y-2">
               <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
-                <Phone className="w-4 h-4 text-slate-400" /> Phone Number
+                <Phone className="w-4 h-4 text-slate-400" /> Phone Number (Nepal)
               </label>
-              <input
-                type="tel"
-                required
-                className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none transition-all bg-slate-50"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="+977 98XXXXXXXX"
-              />
+              <div className="flex">
+                <span className="inline-flex items-center px-4 rounded-l-xl border border-r-0 border-slate-200 bg-slate-100 text-slate-500 font-bold">
+                  +977
+                </span>
+                <input
+                  type="tel"
+                  required
+                  className="w-full px-4 py-3 rounded-r-xl border border-slate-200 focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none transition-all bg-slate-50"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                  placeholder="98XXXXXXXX"
+                />
+              </div>
             </div>
             <div className="space-y-2">
               <label className="text-sm font-bold text-slate-700 flex items-center gap-2">

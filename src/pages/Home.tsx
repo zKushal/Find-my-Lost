@@ -1,11 +1,12 @@
-import { useEffect, useState } from 'react';
-import { MapPin, Clock, Tag, Edit, Sparkles, ShieldCheck, Users, ChevronRight, Search } from 'lucide-react';
+import { useEffect, useState, useMemo } from 'react';
+import { MapPin, Clock, Tag, Edit, Sparkles, ShieldCheck, Users, ChevronRight, Search, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { Link } from 'react-router-dom';
-import { collection, query, where, onSnapshot } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, getCountFromServer, orderBy, limit, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from '../contexts/AuthContext';
 import { handleFirestoreError, OperationType } from '../utils/firestoreErrorHandler';
+import LocationSelector from '../components/LocationSelector';
 
 interface Item {
   id: string;
@@ -32,6 +33,8 @@ interface Item {
   name?: string;
   userId: string;
   type: 'lost' | 'found';
+  district?: string;
+  city?: string;
 }
 
 export default function Home() {
@@ -40,6 +43,13 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [filterType, setFilterType] = useState<string>('all');
   const [filterCategory, setFilterCategory] = useState<string>('all');
+  const [filterDistrict, setFilterDistrict] = useState<string>('');
+  const [filterCity, setFilterCity] = useState<string>('');
+  
+  const [stats, setStats] = useState({
+    reported: 0,
+    matched: 0
+  });
 
   useEffect(() => {
     const q = query(
@@ -64,19 +74,44 @@ export default function Home() {
       setLoading(false);
     });
 
+    // Fetch stats and top contributors
+    const fetchStats = async () => {
+      try {
+        const itemsCount = await getCountFromServer(query(collection(db, 'items'), where('status', '==', 'approved')));
+        const matchesCount = await getCountFromServer(query(collection(db, 'matches'), where('status', '==', 'confirmed')));
+        setStats({
+          reported: itemsCount.data().count,
+          matched: matchesCount.data().count
+        });
+      } catch (error) {
+        console.error("Error fetching stats:", error);
+      }
+    };
+    fetchStats();
+
     return () => unsubscribe();
   }, []);
 
-  const filteredItems = items.filter(item => {
-    const matchesType = filterType === 'all' || item.type === filterType;
-    const matchesCategory = filterCategory === 'all' || item.category === filterCategory;
-    return matchesType && matchesCategory;
-  });
+  const formatStat = (num: number) => {
+    if (num === 0) return '0';
+    const rounded = Math.floor(num / 10) * 10;
+    return `${rounded.toLocaleString()}+`;
+  };
+
+  const filteredItems = useMemo(() => {
+    return items.filter(item => {
+      const matchesType = filterType === 'all' || item.type === filterType;
+      const matchesCategory = filterCategory === 'all' || item.category === filterCategory;
+      const matchesDistrict = !filterDistrict || item.district === filterDistrict;
+      const matchesCity = !filterCity || item.city === filterCity;
+      return matchesType && matchesCategory && matchesDistrict && matchesCity;
+    });
+  }, [items, filterType, filterCategory, filterDistrict, filterCity]);
 
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-brand-orange"></div>
+        <Loader2 className="w-12 h-12 text-brand-orange animate-spin" />
       </div>
     );
   }
@@ -112,8 +147,8 @@ export default function Home() {
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-3xl mx-auto pt-12">
             {[
-              { label: 'Items Reported', value: '2,450+' },
-              { label: 'Items Matched', value: '1,180' },
+              { label: 'Items Reported', value: formatStat(stats.reported || 0) },
+              { label: 'Items Matched', value: formatStat(stats.matched || 0) },
               { label: 'Districts Covered', value: '77' }
             ].map((stat, i) => (
               <div key={i} className="bg-white/10 backdrop-blur-md border border-white/20 p-6 rounded-2xl">
@@ -175,49 +210,54 @@ export default function Home() {
         </div>
 
         {/* Filters */}
-        <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col lg:flex-row gap-6 items-center justify-between">
-          <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
-            {[
-              { id: 'all', label: 'All' },
-              { id: 'electronics', label: 'Electronics' },
-              { id: 'wallet', label: 'Wallet/Purse' },
-              { id: 'documents', label: 'Documents' },
-              { id: 'jewelry', label: 'Jewelry' },
-              { id: 'clothing', label: 'Clothing' },
-              { id: 'pets', label: 'Pet' },
-              { id: 'person', label: 'Person' },
-              { id: 'other', label: 'Other' }
-            ].map((cat) => (
-              <button
-                key={cat.id}
-                onClick={() => setFilterCategory(cat.id)}
-                className={`px-5 py-2 rounded-xl text-sm font-semibold transition-all ${
-                  filterCategory === cat.id 
-                    ? 'bg-brand-orange text-white shadow-md shadow-brand-orange/20' 
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                }`}
+        <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-xl shadow-slate-200/30 space-y-6">
+          <div className="flex flex-col lg:flex-row gap-6 items-center justify-between">
+            <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+              {[
+                { id: 'all', label: 'All' },
+                { id: 'electronics', label: 'Electronics' },
+                { id: 'wallet', label: 'Wallet/Purse' },
+                { id: 'documents', label: 'Documents' },
+                { id: 'jewelry', label: 'Jewelry' },
+                { id: 'clothing', label: 'Clothing' },
+                { id: 'pets', label: 'Pet' },
+                { id: 'person', label: 'Person' },
+                { id: 'other', label: 'Other' }
+              ].map((cat) => (
+                <button
+                  key={cat.id}
+                  onClick={() => setFilterCategory(cat.id)}
+                  className={`px-5 py-2 rounded-xl text-sm font-semibold transition-all ${
+                    filterCategory === cat.id 
+                      ? 'bg-brand-orange text-white shadow-md shadow-brand-orange/20' 
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  {cat.label}
+                </button>
+              ))}
+            </div>
+            
+            <div className="w-full lg:w-48 shrink-0">
+              <select 
+                value={filterType}
+                onChange={(e) => setFilterType(e.target.value)}
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-medium focus:ring-2 focus:ring-brand-orange/20 outline-none"
               >
-                {cat.label}
-              </button>
-            ))}
+                <option value="all">All Types</option>
+                <option value="lost">Lost Items</option>
+                <option value="found">Found Items</option>
+              </select>
+            </div>
           </div>
-          
-          <div className="flex items-center gap-4 w-full lg:w-auto shrink-0">
-            <select 
-              value={filterType}
-              onChange={(e) => setFilterType(e.target.value)}
-              className="w-full lg:w-48 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-medium focus:ring-2 focus:ring-brand-orange/20 outline-none"
-            >
-              <option value="all">All Types</option>
-              <option value="lost">Lost Items</option>
-              <option value="found">Found Items</option>
-            </select>
-            <select className="w-full lg:w-48 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-medium focus:ring-2 focus:ring-brand-orange/20 outline-none">
-              <option>All Districts</option>
-              <option>Kathmandu</option>
-              <option>Lalitpur</option>
-              <option>Bhaktapur</option>
-            </select>
+
+          <div className="pt-6 border-t border-slate-100">
+            <LocationSelector 
+              onLocationSelect={(district, city) => {
+                setFilterDistrict(district);
+                setFilterCity(city);
+              }}
+            />
           </div>
         </div>
 
@@ -270,11 +310,16 @@ export default function Home() {
                       <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center shrink-0 mt-0.5">
                         <MapPin className="w-4 h-4 text-slate-400" />
                       </div>
-                      <span className="text-sm font-medium line-clamp-2">
-                        {item.type === 'lost' 
-                          ? (item.lostLocationDescription || 'Location not specified')
-                          : (item.foundLocationDescription || 'Location not specified')}
-                      </span>
+                      <div className="flex flex-col">
+                        <span className="text-sm font-bold text-slate-900">
+                          {item.district ? `${item.district}, ${item.city}` : 'Nepal'}
+                        </span>
+                        <span className="text-xs text-slate-500 line-clamp-1">
+                          {item.type === 'lost' 
+                            ? (item.lostLocationDescription || 'Location not specified')
+                            : (item.foundLocationDescription || 'Location not specified')}
+                        </span>
+                      </div>
                     </div>
                     <div className="flex items-center gap-2.5 text-slate-600">
                       <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center shrink-0">
@@ -329,6 +374,7 @@ export default function Home() {
           </div>
         )}
       </section>
+
     </div>
   );
 }

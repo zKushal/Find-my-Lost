@@ -27,6 +27,8 @@ export default function Browse() {
   const [loading, setLoading] = useState(true);
   const [filterType, setFilterType] = useState<string>(searchParams.get('type') || 'all');
   const [filterCategory, setFilterCategory] = useState<string>(searchParams.get('category') || 'all');
+  const [startDate, setStartDate] = useState<string>(searchParams.get('startDate') || '');
+  const [endDate, setEndDate] = useState<string>(searchParams.get('endDate') || '');
   const searchQuery = searchParams.get('q') || '';
 
   useEffect(() => {
@@ -54,7 +56,11 @@ export default function Browse() {
     const matchesType = filterType === 'all' || item.type === filterType;
     const matchesCategory = filterCategory === 'all' || item.category === filterCategory;
     
-    return matchesSearch && matchesType && matchesCategory;
+    const itemDate = new Date(item.timeFrom);
+    const matchesStartDate = !startDate || itemDate >= new Date(startDate);
+    const matchesEndDate = !endDate || itemDate <= new Date(endDate);
+    
+    return matchesSearch && matchesType && matchesCategory && matchesStartDate && matchesEndDate;
   });
 
   const categories = [
@@ -165,6 +171,47 @@ export default function Browse() {
                   ))}
                 </div>
               </div>
+
+              {/* Date Range Filter */}
+              <div className="space-y-4">
+                <h4 className="text-sm font-bold text-slate-500 uppercase tracking-wider">Date Range</h4>
+                <div className="space-y-3">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-slate-400 uppercase">From</label>
+                    <input
+                      type="date"
+                      value={startDate}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setStartDate(val);
+                        setSearchParams(prev => {
+                          if (val) prev.set('startDate', val);
+                          else prev.delete('startDate');
+                          return prev;
+                        });
+                      }}
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none transition-all"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-slate-400 uppercase">To</label>
+                    <input
+                      type="date"
+                      value={endDate}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setEndDate(val);
+                        setSearchParams(prev => {
+                          if (val) prev.set('endDate', val);
+                          else prev.delete('endDate');
+                          return prev;
+                        });
+                      }}
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none transition-all"
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -254,6 +301,8 @@ export default function Browse() {
                   onClick={() => {
                     setFilterType('all');
                     setFilterCategory('all');
+                    setStartDate('');
+                    setEndDate('');
                     setSearchParams({});
                   }}
                   className="mt-8 text-brand-orange font-bold hover:underline"

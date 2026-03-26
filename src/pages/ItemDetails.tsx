@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { doc, getDoc, collection, query, where, getDocs, addDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, getDocs, addDoc, serverTimestamp, orderBy } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from '../contexts/AuthContext';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
-import { MapPin, Calendar, Tag, Info, Phone, Award, User, MessageSquare, ArrowLeft, Share2, ShieldCheck, Package, Clock, Map as MapIcon } from 'lucide-react';
+import { MapPin, Calendar, Tag, Info, Phone, Award, User, MessageSquare, ArrowLeft, Share2, ShieldCheck, Package, Clock, Map as MapIcon, Search, ChevronRight } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
@@ -72,6 +72,8 @@ export default function ItemDetails() {
   const [item, setItem] = useState<Item | null>(null);
   const [loading, setLoading] = useState(true);
   const [ownerProfile, setOwnerProfile] = useState<any>(null);
+  const [matches, setMatches] = useState<any[]>([]);
+  const [loadingMatches, setLoadingMatches] = useState(false);
 
   useEffect(() => {
     const fetchItem = async () => {
@@ -90,6 +92,9 @@ export default function ItemDetails() {
           if (userSnap.exists()) {
             setOwnerProfile(userSnap.data());
           }
+
+          // Fetch matches
+          fetchMatches(itemData);
         } else {
           toast.error('Item not found');
           navigate('/');
@@ -103,6 +108,38 @@ export default function ItemDetails() {
 
     fetchItem();
   }, [id, navigate]);
+
+  const fetchMatches = async (currentItem: Item) => {
+    setLoadingMatches(true);
+    try {
+      const matchField = currentItem.type === 'lost' ? 'lostItemId' : 'foundItemId';
+      const q = query(
+        collection(db, 'matches'),
+        where(matchField, '==', currentItem.id),
+        orderBy('matchScore', 'desc')
+      );
+      const querySnapshot = await getDocs(q);
+      const matchDocs = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as any));
+      
+      const otherItemField = currentItem.type === 'lost' ? 'foundItemId' : 'lostItemId';
+      const matchedItems = await Promise.all(
+        matchDocs.map(async (m) => {
+          const itemRef = doc(db, 'items', m[otherItemField]);
+          const itemSnap = await getDoc(itemRef);
+          if (itemSnap.exists()) {
+            return { ...m, matchedItem: { id: itemSnap.id, ...itemSnap.data() } };
+          }
+          return null;
+        })
+      );
+      
+      setMatches(matchedItems.filter(m => m !== null));
+    } catch (error) {
+      console.error('Error fetching matches:', error);
+    } finally {
+      setLoadingMatches(false);
+    }
+  };
 
   const handleContact = async () => {
     if (!user) {
@@ -463,6 +500,54 @@ export default function ItemDetails() {
                   </p>
                 </div>
               </div>
+
+              {/* Potential Matches Section */}
+              {matches.length > 0 && (
+                <div className="bg-white p-8 rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 space-y-6">
+                  <div className="flex items-center gap-3 text-brand-orange">
+                    <div className="w-10 h-10 bg-brand-orange/10 rounded-xl flex items-center justify-center">
+                      <Search className="w-5 h-5" />
+                    </div>
+                    <h3 className="text-xl font-bold text-slate-900">Potential Matches</h3>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    {matches.map((m: any) => (
+                      <Link 
+                        to={`/item/${m.matchedItem.id}`} 
+                        key={m.id}
+                        className="block p-4 border border-slate-100 rounded-2xl hover:border-brand-orange/30 hover:bg-brand-orange/5 transition-all group"
+                      >
+                        <div className="flex items-center gap-4">
+                          <div className="w-16 h-16 rounded-xl overflow-hidden bg-slate-100 shrink-0">
+                            {m.matchedItem.photoData ? (
+                              <img src={m.matchedItem.photoData} alt="Match" className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-slate-400">
+                                <Search className="w-6 h-6" />
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="text-[10px] font-bold text-brand-orange uppercase tracking-wider bg-brand-orange/10 px-2 py-0.5 rounded-full">
+                                {m.matchScore}% Match
+                              </span>
+                            </div>
+                            <h5 className="font-bold text-slate-900 truncate mt-1">
+                              {m.matchedItem.brand} {m.matchedItem.model}
+                            </h5>
+                            <p className="text-xs text-slate-500 truncate">
+                              {m.matchedItem.district}, {m.matchedItem.city}
+                            </p>
+                          </div>
+                          <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-brand-orange transition-colors" />
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Safety Tips */}
               <div className="bg-slate-900 p-8 rounded-3xl text-white space-y-6">

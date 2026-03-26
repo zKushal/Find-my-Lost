@@ -9,6 +9,17 @@
         "email": { "type": "string", "format": "email", "description": "The user's email address." },
         "name": { "type": "string", "description": "The user's full name." },
         "role": { "type": "string", "enum": ["user", "admin"], "description": "The user's role." },
+        "phone": { "type": "string", "description": "The user's phone number." },
+        "avatarUrl": { "type": "string", "description": "The user's profile picture URL." },
+        "notifications": {
+          "type": "object",
+          "properties": {
+            "emailOnApproval": { "type": "boolean" },
+            "emailOnMatch": { "type": "boolean" },
+            "inAppNotifications": { "type": "boolean" }
+          },
+          "description": "User's notification preferences."
+        },
         "createdAt": { "type": "string", "format": "date-time", "description": "When the user was created." }
       },
       "required": ["uid", "email", "name", "role", "createdAt"]
@@ -28,6 +39,8 @@
         "reward": { "type": "number", "description": "Offered reward for lost items (optional)." },
         "contactNumber": { "type": "string", "description": "Alternative contact number for this report." },
         "description": { "type": "string", "description": "A detailed description of the item." },
+        "district": { "type": "string", "description": "The district where the item was lost or found." },
+        "city": { "type": "string", "description": "The city where the item was lost or found." },
         "locationFromLat": { "type": "number", "description": "Latitude of the primary location." },
         "locationFromLng": { "type": "number", "description": "Longitude of the primary location." },
         "locationToLat": { "type": "number", "description": "Latitude of the secondary location (optional)." },

@@ -5,11 +5,14 @@ import { MapPin, Clock, Tag, Search, Loader2 } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, doc, updateDoc, increment } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from '../contexts/AuthContext';
 import { handleFirestoreError, OperationType } from '../utils/firestoreErrorHandler';
 import MapSearch from '../components/MapSearch';
+import LocationMarker from '../components/LocationMarker';
+import MapController from '../components/MapController';
+import LocationSelector from '../components/LocationSelector';
 
 // Fix leaflet icon issue
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -18,19 +21,6 @@ L.Icon.Default.mergeOptions({
   iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
-
-function LocationMarker({ position, setPosition }: any) {
-  useMapEvents({
-    click(e) {
-      setPosition(e.latlng);
-    },
-  });
-
-  return position === null ? null : (
-    <Marker position={position}>
-    </Marker>
-  );
-}
 
 const fileToBase64 = (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
@@ -78,6 +68,8 @@ export default function ReportLost() {
   const [jewelryWeight, setJewelryWeight] = useState('');
   const [itemCondition, setItemCondition] = useState('used');
   const [distinguishingFeatures, setDistinguishingFeatures] = useState('');
+  const [district, setDistrict] = useState('');
+  const [city, setCity] = useState('');
 
   const [timeFrom, setTimeFrom] = useState('');
   const [timeTo, setTimeTo] = useState('');
@@ -98,6 +90,11 @@ export default function ReportLost() {
 
     if (!locationFrom) {
       toast.error('Please select a location on the map');
+      return;
+    }
+
+    if (!district || !city) {
+      toast.error('Please select a district and city');
       return;
     }
 
@@ -132,6 +129,8 @@ export default function ReportLost() {
         timeFrom,
         locationFromLat: locationFrom.lat,
         locationFromLng: locationFrom.lng,
+        district,
+        city,
         status: 'pending',
         createdAt: serverTimestamp(),
         itemCondition,
@@ -172,7 +171,7 @@ export default function ReportLost() {
       if (photoData) itemData.photoData = photoData;
       if (videoData) itemData.videoData = videoData;
 
-      await addDoc(collection(db, 'items'), itemData);
+      const docRef = await addDoc(collection(db, 'items'), itemData);
 
       toast.success('Lost item reported successfully. Pending admin approval.');
       navigate('/');
@@ -576,6 +575,18 @@ export default function ReportLost() {
 
               <div className="space-y-4">
                 <div className="space-y-2">
+                  <label className="text-sm font-bold text-slate-700">District & City</label>
+                  <LocationSelector 
+                    onLocationSelect={(d, c) => {
+                      setDistrict(d);
+                      setCity(c);
+                    }}
+                    initialDistrict={district}
+                    initialCity={city}
+                  />
+                </div>
+
+                <div className="space-y-2">
                   <label className="text-sm font-bold text-slate-700">Location Description</label>
                   <input
                     type="text"
@@ -616,9 +627,11 @@ export default function ReportLost() {
                       if (selectingLocation === 'from') setLocationFrom(pos);
                       else setLocationTo(pos);
                     }} />
+                    <MapController district={district} city={city} />
                     <LocationMarker 
                       position={selectingLocation === 'from' ? locationFrom : locationTo} 
                       setPosition={selectingLocation === 'from' ? setLocationFrom : setLocationTo} 
+                      label={selectingLocation === 'from' ? "Start Location" : "End Location"}
                     />
                     {locationFrom && selectingLocation !== 'from' && <Marker position={locationFrom} opacity={0.5} />}
                     {locationTo && selectingLocation !== 'to' && <Marker position={locationTo} opacity={0.5} />}

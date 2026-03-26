@@ -46,6 +46,15 @@ export default function Profile() {
 
   // Danger Zone State
   const [deleteConfirmation, setDeleteConfirmation] = useState('');
+  const [isOtpSent, setIsOtpSent] = useState(false);
+  const [otpInput, setOtpInput] = useState('');
+  const [generatedOtp, setGeneratedOtp] = useState('');
+
+  // Sessions State (Mock)
+  const [sessions, setSessions] = useState([
+    { id: '1', device: 'Mac OS • Chrome', location: 'Kathmandu, Nepal', lastActive: 'Active now', current: true, icon: 'desktop' },
+    { id: '2', device: 'iOS • Safari', location: 'Pokhara, Nepal', lastActive: 'Last active 2 days ago', current: false, icon: 'mobile' }
+  ]);
 
   useEffect(() => {
     if (!user) {
@@ -262,6 +271,24 @@ export default function Profile() {
       toast.error('Please type DELETE to confirm');
       return;
     }
+    
+    // Generate and "send" OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    setGeneratedOtp(otp);
+    setIsOtpSent(true);
+    
+    // In a real app, this would be sent via email/SMS
+    toast.success(`Verification code sent to ${user.email}`);
+    console.log(`[DEMO] Account Deletion OTP: ${otp}`);
+  };
+
+  const handleVerifyOtpAndDelete = async () => {
+    if (!user) return;
+    if (otpInput !== generatedOtp) {
+      toast.error('Invalid verification code');
+      return;
+    }
+
     setLoading(true);
     try {
       await deleteUser(user);
@@ -306,6 +333,11 @@ export default function Profile() {
     return 'Email';
   };
 
+  const revokeSession = (id: string) => {
+    setSessions(sessions.filter(s => s.id !== id));
+    toast.success('Session revoked successfully');
+  };
+
   const isEmailAuth = getProviderName() === 'Email';
   const strength = getPasswordStrength(newPassword);
 
@@ -347,7 +379,7 @@ export default function Profile() {
           </div>
           <div className="flex items-center gap-1">
             <Calendar className="w-4 h-4" />
-            <span>{new Date(item.createdAt?.toDate()).toLocaleDateString()}</span>
+            <span>{item.createdAt?.toDate ? new Date(item.createdAt.toDate()).toLocaleDateString() : 'N/A'}</span>
           </div>
         </div>
       </div>
@@ -372,6 +404,7 @@ export default function Profile() {
             </div>
             <h3 className="font-bold text-slate-900 text-lg">{name || 'User'}</h3>
             <p className="text-slate-500 text-sm">{user?.email}</p>
+            
             <div className="mt-3 px-3 py-1 bg-slate-100 rounded-full text-xs font-bold text-slate-600 flex items-center gap-1">
               <Shield className="w-3 h-3" /> {getProviderName()} Account
             </div>
@@ -665,35 +698,37 @@ export default function Profile() {
                   </div>
                   
                   <div className="space-y-4">
-                    <div className="flex items-center justify-between p-4 border border-brand-orange/30 bg-brand-orange/5 rounded-xl">
-                      <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center shadow-sm">
-                          <svg className="w-5 h-5 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                          </svg>
+                    {sessions.map(session => (
+                      <div key={session.id} className={`flex items-center justify-between p-4 border rounded-xl ${session.current ? 'border-brand-orange/30 bg-brand-orange/5' : 'border-slate-200 bg-white'}`}>
+                        <div className="flex items-center gap-4">
+                          <div className={`w-10 h-10 rounded-lg flex items-center justify-center shadow-sm ${session.current ? 'bg-white' : 'bg-slate-50 border border-slate-100'}`}>
+                            {session.icon === 'desktop' ? (
+                              <svg className={`w-5 h-5 ${session.current ? 'text-slate-600' : 'text-slate-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                              </svg>
+                            ) : (
+                              <svg className={`w-5 h-5 ${session.current ? 'text-slate-600' : 'text-slate-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                              </svg>
+                            )}
+                          </div>
+                          <div>
+                            <h4 className="font-bold text-slate-900 text-sm">{session.device}</h4>
+                            <p className="text-xs text-slate-500">{session.location} • {session.lastActive}</p>
+                          </div>
                         </div>
-                        <div>
-                          <h4 className="font-bold text-slate-900 text-sm">Mac OS • Chrome</h4>
-                          <p className="text-xs text-slate-500">Kathmandu, Nepal • Active now</p>
-                        </div>
+                        {session.current ? (
+                          <span className="text-xs font-bold text-brand-orange bg-white px-2 py-1 rounded-md border border-brand-orange/20">Current</span>
+                        ) : (
+                          <button 
+                            onClick={() => revokeSession(session.id)}
+                            className="text-xs font-bold text-red-600 hover:bg-red-50 px-3 py-1.5 rounded-md transition-colors"
+                          >
+                            Revoke
+                          </button>
+                        )}
                       </div>
-                      <span className="text-xs font-bold text-brand-orange bg-white px-2 py-1 rounded-md border border-brand-orange/20">Current</span>
-                    </div>
-
-                    <div className="flex items-center justify-between p-4 border border-slate-200 bg-white rounded-xl">
-                      <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 bg-slate-50 rounded-lg flex items-center justify-center border border-slate-100">
-                          <svg className="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                          </svg>
-                        </div>
-                        <div>
-                          <h4 className="font-bold text-slate-900 text-sm">iOS • Safari</h4>
-                          <p className="text-xs text-slate-500">Pokhara, Nepal • Last active 2 days ago</p>
-                        </div>
-                      </div>
-                      <button className="text-xs font-bold text-red-600 hover:bg-red-50 px-3 py-1.5 rounded-md transition-colors">Revoke</button>
-                    </div>
+                    ))}
                   </div>
                 </div>
 
@@ -863,21 +898,60 @@ export default function Profile() {
                     </p>
                     
                     <div className="pt-4 space-y-3">
-                      <label className="text-sm font-bold text-slate-700">Type "DELETE" to confirm</label>
-                      <input
-                        type="text"
-                        value={deleteConfirmation}
-                        onChange={(e) => setDeleteConfirmation(e.target.value)}
-                        className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-red-500/20 focus:border-red-500 outline-none transition-all"
-                        placeholder="DELETE"
-                      />
-                      <button
-                        onClick={handleDeleteAccount}
-                        disabled={deleteConfirmation !== 'DELETE' || loading}
-                        className="w-full bg-red-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-red-700 transition-all disabled:opacity-50 disabled:hover:bg-red-600"
-                      >
-                        {loading ? 'Deleting...' : 'Permanently Delete Account'}
-                      </button>
+                      {!isOtpSent ? (
+                        <>
+                          <label className="text-sm font-bold text-slate-700">Type "DELETE" to confirm</label>
+                          <input
+                            type="text"
+                            value={deleteConfirmation}
+                            onChange={(e) => setDeleteConfirmation(e.target.value)}
+                            className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-red-500/20 focus:border-red-500 outline-none transition-all"
+                            placeholder="DELETE"
+                          />
+                          <button
+                            onClick={handleDeleteAccount}
+                            disabled={deleteConfirmation !== 'DELETE' || loading}
+                            className="w-full bg-red-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-red-700 transition-all disabled:opacity-50 disabled:hover:bg-red-600"
+                          >
+                            {loading ? 'Processing...' : 'Permanently Delete Account'}
+                          </button>
+                        </>
+                      ) : (
+                        <div className="space-y-4 p-4 bg-slate-50 rounded-xl border border-slate-200">
+                          <div className="flex items-center gap-3 text-slate-900">
+                            <Shield className="w-5 h-5 text-brand-orange" />
+                            <h4 className="font-bold">Verify Identity</h4>
+                          </div>
+                          <p className="text-sm text-slate-600">
+                            We've sent a 6-digit verification code to <strong>{user?.email}</strong>. Please enter it below to confirm deletion.
+                          </p>
+                          <div className="space-y-2">
+                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Verification Code</label>
+                            <input
+                              type="text"
+                              value={otpInput}
+                              onChange={(e) => setOtpInput(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                              className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none transition-all text-center text-2xl tracking-[0.5em] font-mono"
+                              placeholder="000000"
+                            />
+                          </div>
+                          <div className="flex gap-3">
+                            <button
+                              onClick={() => setIsOtpSent(false)}
+                              className="flex-1 px-4 py-3 bg-white border border-slate-200 text-slate-600 rounded-xl font-bold hover:bg-slate-50 transition-all"
+                            >
+                              Back
+                            </button>
+                            <button
+                              onClick={handleVerifyOtpAndDelete}
+                              disabled={otpInput.length !== 6 || loading}
+                              className="flex-[2] bg-red-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-red-700 transition-all disabled:opacity-50"
+                            >
+                              {loading ? 'Deleting...' : 'Confirm & Delete'}
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

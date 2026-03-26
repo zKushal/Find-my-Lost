@@ -4,12 +4,15 @@ import { toast } from 'sonner';
 import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-import { collection, addDoc, serverTimestamp, getDocs, query, where } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, getDocs, query, where, doc, updateDoc, increment } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from '../contexts/AuthContext';
 import { handleFirestoreError, OperationType } from '../utils/firestoreErrorHandler';
 import { GoogleGenAI } from '@google/genai';
 import MapSearch from '../components/MapSearch';
+import LocationMarker from '../components/LocationMarker';
+import MapController from '../components/MapController';
+import LocationSelector from '../components/LocationSelector';
 
 // Fix leaflet icon issue
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -18,19 +21,6 @@ L.Icon.Default.mergeOptions({
   iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
-
-function LocationMarker({ position, setPosition }: any) {
-  useMapEvents({
-    click(e) {
-      setPosition(e.latlng);
-    },
-  });
-
-  return position === null ? null : (
-    <Marker position={position}>
-    </Marker>
-  );
-}
 
 const fileToBase64 = (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
@@ -81,6 +71,8 @@ export default function ReportFound() {
   const [jewelryWeight, setJewelryWeight] = useState('');
   const [itemCondition, setItemCondition] = useState('good');
   const [distinguishingFeatures, setDistinguishingFeatures] = useState('');
+  const [district, setDistrict] = useState('');
+  const [city, setCity] = useState('');
 
   const [timeFrom, setTimeFrom] = useState('');
   const [photo, setPhoto] = useState<File | null>(null);
@@ -98,6 +90,11 @@ export default function ReportFound() {
 
     if (!locationFrom) {
       toast.error('Please select a location on the map');
+      return;
+    }
+
+    if (!district || !city) {
+      toast.error('Please select a district and city');
       return;
     }
 
@@ -137,6 +134,8 @@ export default function ReportFound() {
         timeFrom,
         locationFromLat: locationFrom.lat,
         locationFromLng: locationFrom.lng,
+        district,
+        city,
         status: 'approved',
         createdAt: serverTimestamp(),
         itemCondition,
@@ -427,6 +426,8 @@ export default function ReportFound() {
           Condition: ${lostItem.itemCondition || 'N/A'}
           Distinguishing Features: ${lostItem.distinguishingFeatures || 'N/A'}
           Description: ${lostItem.description}
+          District: ${lostItem.district || 'N/A'}
+          City: ${lostItem.city || 'N/A'}
           Location From (Lat, Lng): ${lostItem.locationFromLat}, ${lostItem.locationFromLng}
           Location To (Lat, Lng): ${lostItem.locationToLat || 'N/A'}, ${lostItem.locationToLng || 'N/A'}
           Time Range: ${lostItem.timeFrom} to ${lostItem.timeTo || 'N/A'}
@@ -454,6 +455,8 @@ export default function ReportFound() {
           Condition: ${foundItem.itemCondition || 'N/A'}
           Distinguishing Features: ${foundItem.distinguishingFeatures || 'N/A'}
           Description: ${foundItem.description}
+          District: ${foundItem.district || 'N/A'}
+          City: ${foundItem.city || 'N/A'}
           Location Found (Lat, Lng): ${foundItem.locationFromLat}, ${foundItem.locationFromLng}
           Location Description: ${foundItem.foundLocationDescription || 'N/A'}
           Time Found: ${foundItem.timeFrom}
@@ -729,6 +732,18 @@ export default function ReportFound() {
 
               <div className="space-y-4">
                 <div className="space-y-2">
+                  <label className="text-sm font-bold text-slate-700">District & City</label>
+                  <LocationSelector 
+                    onLocationSelect={(d, c) => {
+                      setDistrict(d);
+                      setCity(c);
+                    }}
+                    initialDistrict={district}
+                    initialCity={city}
+                  />
+                </div>
+
+                <div className="space-y-2">
                   <label className="text-sm font-bold text-slate-700">Location Description</label>
                   <input
                     type="text"
@@ -748,9 +763,11 @@ export default function ReportFound() {
                       url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                     />
                     <MapSearch onLocationSelect={setLocationFrom} />
+                    <MapController district={district} city={city} />
                     <LocationMarker 
                       position={locationFrom} 
                       setPosition={setLocationFrom} 
+                      label="Location Found"
                     />
                   </MapContainer>
                 </div>
