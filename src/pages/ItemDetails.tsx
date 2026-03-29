@@ -28,7 +28,9 @@ interface Item {
   model?: string;
   color?: string;
   secondaryColor?: string;
-  contactNumber?: string;
+  contactName?: string;
+  contactEmail?: string;
+  contactPhone?: string;
   description: string;
   lostLocationDescription?: string;
   foundLocationDescription?: string;
@@ -515,21 +517,31 @@ export default function ItemDetails() {
                     <User className="w-6 h-6" />
                   </div>
                   <div>
-                    <h4 className="font-bold text-slate-900">{ownerProfile?.name || 'Anonymous User'}</h4>
+                    <h4 className="font-bold text-slate-900">{item.contactName || ownerProfile?.name || 'Anonymous User'}</h4>
                     {user ? (
-                      <div className="text-sm text-slate-600 mt-0.5">
-                        {item.contactNumber ? (
-                          <a href={`tel:${item.contactNumber}`} className="hover:text-brand-orange transition-colors">
-                            {item.contactNumber}
-                          </a>
-                        ) : (
+                      <div className="text-sm text-slate-600 mt-0.5 space-y-1">
+                        {item.contactPhone && (
+                          <div className="flex items-center gap-1.5">
+                            <a href={`tel:${item.contactPhone}`} className="hover:text-brand-orange transition-colors">
+                              {item.contactPhone}
+                            </a>
+                          </div>
+                        )}
+                        {item.contactEmail && (
+                          <div className="flex items-center gap-1.5">
+                            <a href={`mailto:${item.contactEmail}`} className="hover:text-brand-orange transition-colors">
+                              {item.contactEmail}
+                            </a>
+                          </div>
+                        )}
+                        {!item.contactPhone && !item.contactEmail && (
                           <span className="text-slate-400 italic">No contact provided</span>
                         )}
                       </div>
                     ) : (
                       <div className="flex items-center gap-1.5 text-xs text-slate-500 mt-1">
                         <Mail className="w-3.5 h-3.5" />
-                        <span>Login to see contact</span>
+                        <span>Login to see contact info</span>
                       </div>
                     )}
                   </div>

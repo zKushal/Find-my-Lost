@@ -3,7 +3,7 @@ import { Search, LogOut, ShieldAlert, LogIn, X } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { auth } from '../firebase';
 import { signOut } from 'firebase/auth';
-import Notifications from './Notifications';
+import NotificationBell from './common/NotificationBell';
 import { useState } from 'react';
 
 export default function Navbar() {
@@ -72,7 +72,7 @@ export default function Navbar() {
                 <Link to="/user" className="text-slate-600 hover:text-brand-orange font-medium transition-colors">
                   User Panel
                 </Link>
-                <Notifications />
+                <NotificationBell />
                 <button onClick={handleLogout} className="text-slate-600 hover:text-red-600 font-medium flex items-center gap-1 p-2 rounded-lg hover:bg-slate-100 transition-colors">
                   <LogOut className="w-5 h-5" />
                 </button>

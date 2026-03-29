@@ -40,7 +40,7 @@ const fileToBase64 = (file: File): Promise<string> => {
   });
 };
 
-import { Search, MapPin, Calendar, Camera, Video, Tag, Info, Phone, Award, Save, ArrowLeft } from 'lucide-react';
+import { Search, MapPin, Calendar, Camera, Video, Tag, Info, Phone, Award, Save, ArrowLeft, User } from 'lucide-react';
 
 export default function EditItem() {
   const { id } = useParams();
@@ -55,7 +55,9 @@ export default function EditItem() {
   const [model, setModel] = useState('');
   const [color, setColor] = useState('');
   const [secondaryColor, setSecondaryColor] = useState('');
-  const [contactNumber, setContactNumber] = useState('');
+  const [contactName, setContactName] = useState('');
+  const [contactEmail, setContactEmail] = useState('');
+  const [contactPhone, setContactPhone] = useState('');
   const [description, setDescription] = useState('');
   const [foundLocationDescription, setFoundLocationDescription] = useState('');
   const [lostLocationDescription, setLostLocationDescription] = useState('');
@@ -131,7 +133,9 @@ export default function EditItem() {
           setModel(data.model || '');
           setColor(data.color || '');
           setSecondaryColor(data.secondaryColor || '');
-          setContactNumber(data.contactNumber || '');
+          setContactName(data.contactName || '');
+          setContactEmail(data.contactEmail || '');
+          setContactPhone(data.contactPhone || '');
           setDescription(data.description);
           setFoundLocationDescription(data.foundLocationDescription || '');
           setLostLocationDescription(data.lostLocationDescription || '');
@@ -238,7 +242,9 @@ export default function EditItem() {
       const itemData: any = {
         category,
         secondaryColor,
-        contactNumber,
+        contactName,
+        contactEmail,
+        contactPhone,
         description,
         foundLocationDescription,
         lostLocationDescription,
@@ -797,14 +803,41 @@ export default function EditItem() {
             </div>
             <div className="space-y-2">
               <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
-                <Phone className="w-4 h-4 text-slate-400" /> Alt Contact
+                <Phone className="w-4 h-4 text-slate-400" /> Contact Phone
               </label>
               <input
                 type="tel"
                 className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none transition-all bg-white"
                 placeholder="98XXXXXXXX"
-                value={contactNumber}
-                onChange={(e) => setContactNumber(e.target.value)}
+                value={contactPhone}
+                onChange={(e) => setContactPhone(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
+                <User className="w-4 h-4 text-slate-400" /> Contact Name
+              </label>
+              <input
+                type="text"
+                className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none transition-all bg-white"
+                placeholder="Name"
+                value={contactName}
+                onChange={(e) => setContactName(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
+                <User className="w-4 h-4 text-slate-400" /> Contact Email
+              </label>
+              <input
+                type="email"
+                className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none transition-all bg-white"
+                placeholder="Email"
+                value={contactEmail}
+                onChange={(e) => setContactEmail(e.target.value)}
               />
             </div>
           </div>

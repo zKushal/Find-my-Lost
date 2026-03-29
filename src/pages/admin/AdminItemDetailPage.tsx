@@ -82,7 +82,7 @@ export default function AdminItemDetailPage() {
   if (!item) return null;
 
   const extraFields = Object.entries(item).filter(([key]) => {
-    const hiddenKeys = ['id', 'userId', 'type', 'category', 'description', 'status', 'createdAt', 'updatedAt', 'photoData', 'videoData', 'locationFromLat', 'locationFromLng', 'locationToLat', 'locationToLng', 'district', 'city', 'timeFrom', 'timeTo', 'reviewed_by', 'reviewed_at', 'admin_note'];
+    const hiddenKeys = ['id', 'userId', 'type', 'category', 'description', 'status', 'createdAt', 'updatedAt', 'photoData', 'videoData', 'locationFromLat', 'locationFromLng', 'locationToLat', 'locationToLng', 'district', 'city', 'timeFrom', 'timeTo', 'reviewed_by', 'reviewed_at', 'admin_note', 'contactName', 'contactEmail', 'contactPhone'];
     return !hiddenKeys.includes(key) && item[key] !== undefined && item[key] !== null && item[key] !== '';
   });
 
@@ -228,14 +228,28 @@ export default function AdminItemDetailPage() {
             <div className="space-y-3">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center font-bold text-gray-600">
-                  {item.userId.substring(0, 1).toUpperCase()}
+                  {item.contactName ? item.contactName.substring(0, 1).toUpperCase() : item.userId.substring(0, 1).toUpperCase()}
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-gray-900">User ID</p>
-                  <p className="text-xs text-gray-500">{item.userId.substring(0, 8)}...</p>
+                  <p className="text-sm font-bold text-gray-900">{item.contactName || 'Anonymous'}</p>
+                  <p className="text-xs text-gray-500">ID: {item.userId.substring(0, 8)}...</p>
                 </div>
               </div>
               
+              {item.contactEmail && (
+                <div>
+                  <span className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-0.5">Email</span>
+                  <span className="text-sm font-medium text-gray-900">{item.contactEmail}</span>
+                </div>
+              )}
+
+              {item.contactPhone && (
+                <div>
+                  <span className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-0.5">Phone</span>
+                  <span className="text-sm font-medium text-gray-900">{item.contactPhone}</span>
+                </div>
+              )}
+
               <div>
                 <span className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-0.5">Submitted On</span>
                 <span className="text-sm font-medium text-gray-900 flex items-center gap-1">

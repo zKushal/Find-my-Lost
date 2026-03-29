@@ -16,6 +16,8 @@ import EditItem from './pages/EditItem';
 import Browse from './pages/Browse';
 import ItemDetails from './pages/ItemDetails';
 import UserPanel from './pages/UserPanel';
+import NotificationsPage from './pages/NotificationsPage';
+import MatchDetailPage from './pages/MatchDetailPage';
 import { AuthProvider } from './contexts/AuthContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
@@ -60,6 +62,8 @@ export default function App() {
                       <Route path="/browse" element={<Browse />} />
                       <Route path="/user" element={<UserPanel />} />
                       <Route path="/profile" element={<Navigate to="/user" replace />} />
+                      <Route path="/notifications" element={<NotificationsPage />} />
+                      <Route path="/matches/:id" element={<MatchDetailPage />} />
                     </Routes>
                   </main>
                   <Footer />

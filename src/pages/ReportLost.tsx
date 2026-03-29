@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { MapPin, Clock, Tag, Search, Loader2 } from 'lucide-react';
+import { MapPin, Clock, Tag, Search, Loader2, User } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
@@ -86,7 +86,17 @@ export default function ReportLost() {
   const [locationFrom, setLocationFrom] = useState<any>(null);
   const [locationTo, setLocationTo] = useState<any>(null);
   const [selectingLocation, setSelectingLocation] = useState<'from' | 'to'>('from');
+  const [contactName, setContactName] = useState('');
+  const [contactEmail, setContactEmail] = useState('');
+  const [contactPhone, setContactPhone] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  React.useEffect(() => {
+    if (user) {
+      setContactName(user.displayName || '');
+      setContactEmail(user.email || '');
+    }
+  }, [user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -140,6 +150,9 @@ export default function ReportLost() {
         district,
         city,
         status: 'pending',
+        contactName,
+        contactEmail,
+        contactPhone,
         createdAt: serverTimestamp()
       };
 
@@ -587,6 +600,30 @@ export default function ReportLost() {
         
         <form onSubmit={handleSubmit} className="bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden">
           <div className="p-8 lg:p-12 space-y-10">
+            {/* Contact Info Section */}
+            <div className="space-y-6">
+              <div className="flex items-center gap-3 pb-2 border-b border-slate-100">
+                <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
+                  <User className="w-5 h-5 text-brand-orange" />
+                </div>
+                <h3 className="text-xl font-bold text-slate-900">Your Contact Information</h3>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-slate-700">Full Name</label>
+                  <input type="text" className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none transition-all bg-slate-50" placeholder="Your Name" value={contactName} onChange={(e) => setContactName(e.target.value)} required />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-slate-700">Email Address</label>
+                  <input type="email" className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none transition-all bg-slate-50" placeholder="Your Email" value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} required />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-slate-700">Phone Number</label>
+                  <input type="tel" className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none transition-all bg-slate-50" placeholder="Your Phone Number" value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} required />
+                </div>
+              </div>
+            </div>
+
             {/* Basic Info Section */}
             <div className="space-y-6">
               <div className="flex items-center gap-3 pb-2 border-b border-slate-100">

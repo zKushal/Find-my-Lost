@@ -30,7 +30,9 @@ interface Item {
   model?: string;
   color?: string;
   secondaryColor?: string;
-  contactNumber?: string;
+  contactName?: string;
+  contactEmail?: string;
+  contactPhone?: string;
   description: string;
   photoData?: string;
   videoData?: string;
