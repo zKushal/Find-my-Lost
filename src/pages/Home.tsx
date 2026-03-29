@@ -1,12 +1,27 @@
 import { useEffect, useState, useMemo } from 'react';
-import { MapPin, Clock, Tag, Edit, Sparkles, ShieldCheck, Users, ChevronRight, Search, Loader2 } from 'lucide-react';
+import { MapPin, Clock, Tag, Edit, Sparkles, ShieldCheck, Users, ChevronRight, Search, Loader2, ArrowRight, Calendar, Gift } from 'lucide-react';
 import { format } from 'date-fns';
+import { nepalLocations } from '../utils/nepalLocations';
 import { Link } from 'react-router-dom';
-import { collection, query, where, onSnapshot, getCountFromServer, orderBy, limit, getDocs } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, getCountFromServer, orderBy, limit } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from '../contexts/AuthContext';
 import { handleFirestoreError, OperationType } from '../utils/firestoreErrorHandler';
-import LocationSelector from '../components/LocationSelector';
+
+const categoryEmojis: Record<string, string> = {
+  electronics: '📱',
+  wallet: '👛',
+  documents: '📄',
+  jewelry: '💍',
+  clothing: '👕',
+  pets: '🐾',
+  person: '👤',
+  keys: '🔑',
+  vehicles: '🚗',
+  musical_instruments: '🎸',
+  glasses: '👓',
+  other: '📦'
+};
 
 interface Item {
   id: string;
@@ -27,7 +42,7 @@ interface Item {
   foundLocationDescription?: string;
   itemCondition?: string;
   distinguishingFeatures?: string;
-  estimatedValue?: string;
+  estimatedValue?: string | number;
   policeReportFiled?: boolean;
   policeReportNumber?: string;
   name?: string;
@@ -35,6 +50,7 @@ interface Item {
   type: 'lost' | 'found';
   district?: string;
   city?: string;
+  status?: string;
 }
 
 export default function Home() {
@@ -94,19 +110,20 @@ export default function Home() {
 
   const formatStat = (num: number) => {
     if (num === 0) return '0';
+    if (num <= 10) return num.toString();
     const rounded = Math.floor(num / 10) * 10;
     return `${rounded.toLocaleString()}+`;
   };
 
   const filteredItems = useMemo(() => {
     return items.filter(item => {
-      const matchesType = filterType === 'all' || item.type === filterType;
+      const matchesType = item.type === 'lost';
       const matchesCategory = filterCategory === 'all' || item.category === filterCategory;
       const matchesDistrict = !filterDistrict || item.district === filterDistrict;
       const matchesCity = !filterCity || item.city === filterCity;
       return matchesType && matchesCategory && matchesDistrict && matchesCity;
     });
-  }, [items, filterType, filterCategory, filterDistrict, filterCity]);
+  }, [items, filterCategory, filterDistrict, filterCity]);
 
   if (loading) {
     return (
@@ -198,66 +215,72 @@ export default function Home() {
       </section>
 
       {/* Recent Reports Section */}
-      <section className="container mx-auto px-4 py-24 space-y-12">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-          <div className="space-y-2">
-            <h2 className="text-3xl lg:text-4xl font-bold text-slate-900">Recent Lost Items</h2>
-            <p className="text-slate-500">Helping people find their belongings across Nepal.</p>
-          </div>
-          <Link to="/browse" className="inline-flex items-center gap-2 text-brand-orange font-bold hover:gap-3 transition-all">
-            View All <ChevronRight className="w-5 h-5" />
+      <section className="container mx-auto px-4 py-24 space-y-8">
+        <div className="flex items-center justify-between">
+          <h2 className="text-3xl font-bold text-slate-900">Recent Lost Items</h2>
+          <Link to="/browse" className="inline-flex items-center gap-2 text-brand-orange font-medium hover:gap-3 transition-all">
+            View All <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
 
         {/* Filters */}
-        <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-xl shadow-slate-200/30 space-y-6">
-          <div className="flex flex-col lg:flex-row gap-6 items-center justify-between">
-            <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
-              {[
-                { id: 'all', label: 'All' },
-                { id: 'electronics', label: 'Electronics' },
-                { id: 'wallet', label: 'Wallet/Purse' },
-                { id: 'documents', label: 'Documents' },
-                { id: 'jewelry', label: 'Jewelry' },
-                { id: 'clothing', label: 'Clothing' },
-                { id: 'pets', label: 'Pet' },
-                { id: 'person', label: 'Person' },
-                { id: 'other', label: 'Other' }
-              ].map((cat) => (
-                <button
-                  key={cat.id}
-                  onClick={() => setFilterCategory(cat.id)}
-                  className={`px-5 py-2 rounded-xl text-sm font-semibold transition-all ${
-                    filterCategory === cat.id 
-                      ? 'bg-brand-orange text-white shadow-md shadow-brand-orange/20' 
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                  }`}
-                >
-                  {cat.label}
-                </button>
-              ))}
-            </div>
-            
-            <div className="w-full lg:w-48 shrink-0">
-              <select 
-                value={filterType}
-                onChange={(e) => setFilterType(e.target.value)}
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-medium focus:ring-2 focus:ring-brand-orange/20 outline-none"
+        <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="flex flex-wrap items-center gap-2">
+            {[
+              { id: 'all', label: 'All' },
+              { id: 'electronics', label: 'Electronics' },
+              { id: 'wallet', label: 'Wallet/Purse' },
+              { id: 'documents', label: 'Documents' },
+              { id: 'jewelry', label: 'Jewelry' },
+              { id: 'clothing', label: 'Clothing' },
+              { id: 'pets', label: 'Pet' },
+              { id: 'person', label: 'Person' },
+              { id: 'keys', label: 'Keys' },
+              { id: 'vehicles', label: 'Vehicles' },
+              { id: 'musical_instruments', label: 'Instruments' },
+              { id: 'glasses', label: 'Glasses' },
+              { id: 'other', label: 'Other' }
+            ].map((cat) => (
+              <button
+                key={cat.id}
+                onClick={() => setFilterCategory(cat.id)}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                  filterCategory === cat.id 
+                    ? 'bg-slate-900 text-white' 
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                }`}
               >
-                <option value="all">All Types</option>
-                <option value="lost">Lost Items</option>
-                <option value="found">Found Items</option>
-              </select>
-            </div>
+                {cat.id !== 'all' && categoryEmojis[cat.id]} {cat.label}
+              </button>
+            ))}
           </div>
-
-          <div className="pt-6 border-t border-slate-100">
-            <LocationSelector 
-              onLocationSelect={(district, city) => {
-                setFilterDistrict(district);
-                setFilterCity(city);
+          
+          <div className="flex flex-col sm:flex-row w-full md:w-auto shrink-0 gap-2">
+            <select 
+              value={filterDistrict}
+              onChange={(e) => {
+                setFilterDistrict(e.target.value);
+                setFilterCity('');
               }}
-            />
+              className="w-full sm:w-40 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-medium focus:ring-2 focus:ring-brand-orange/20 outline-none"
+            >
+              <option value="">All Districts</option>
+              {Object.keys(nepalLocations).sort().map(d => (
+                <option key={d} value={d}>{d}</option>
+              ))}
+            </select>
+            
+            <select 
+              value={filterCity}
+              onChange={(e) => setFilterCity(e.target.value)}
+              disabled={!filterDistrict}
+              className="w-full sm:w-40 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-medium focus:ring-2 focus:ring-brand-orange/20 outline-none disabled:opacity-50"
+            >
+              <option value="">{filterDistrict ? 'All Cities' : 'Select District'}</option>
+              {filterDistrict && nepalLocations[filterDistrict]?.sort().map(c => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
           </div>
         </div>
 
@@ -270,106 +293,64 @@ export default function Home() {
             <p className="text-slate-500">Try adjusting your filters to find what you're looking for.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredItems.map(item => (
-              <div key={item.id} className="group bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden hover:shadow-2xl hover:shadow-slate-200/50 transition-all duration-300">
-                <div className="relative aspect-[4/3] overflow-hidden">
+              <Link to={`/item/${item.id}`} key={item.id} className="group bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col">
+                <div className="relative aspect-[4/3] overflow-hidden bg-slate-100">
                   {item.photoData ? (
-                    <img src={item.photoData} alt={item.category} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                    <img src={item.photoData} alt={item.category} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                   ) : (
-                    <div className="w-full h-full bg-slate-100 flex items-center justify-center">
+                    <div className="w-full h-full flex items-center justify-center">
                       <Search className="w-12 h-12 text-slate-300" />
                     </div>
                   )}
                   
-                  {/* Badges */}
-                  <div className="absolute top-4 left-4 flex flex-col gap-2">
-                    <span className={`px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider shadow-sm ${
-                      item.type === 'lost' ? 'bg-red-500 text-white' : 'bg-emerald-500 text-white'
+                  {/* Top Badges */}
+                  <div className="absolute top-3 left-3 right-3 flex justify-between items-start">
+                    <span className={`px-3 py-1 rounded-full text-xs font-bold text-white shadow-sm ${
+                      item.status === 'matched' ? 'bg-blue-500' :
+                      item.type === 'lost' ? 'bg-red-500' : 'bg-emerald-500'
                     }`}>
-                      {item.type}
+                      {item.status === 'matched' ? 'Matched' : item.type === 'lost' ? 'Lost' : 'Found'}
                     </span>
-                    <span className="bg-white/90 backdrop-blur-md px-3 py-1 rounded-lg text-[10px] font-bold text-slate-900 uppercase tracking-wider shadow-sm flex items-center gap-1.5">
-                      <Tag className="w-3 h-3 text-brand-orange" /> {item.category}
+                    <span className="bg-white/90 backdrop-blur-md px-3 py-1 rounded-full text-xs font-medium text-slate-700 shadow-sm flex items-center gap-1.5 capitalize">
+                      {categoryEmojis[item.category] || <Tag className="w-3 h-3" />} {item.category}
                     </span>
                   </div>
-                </div>
 
-                <div className="p-6 space-y-6">
-                  <div className="space-y-2">
-                    <h3 className="text-xl font-bold text-slate-900 line-clamp-1 group-hover:text-brand-orange transition-colors">
-                      {item.brand ? `${item.brand} ${item.model || ''}` : item.category}
-                    </h3>
-                    <p className="text-slate-500 text-sm line-clamp-2 leading-relaxed">
-                      {item.description}
-                    </p>
-                  </div>
-                  
-                  <div className="space-y-3 pt-4 border-t border-slate-100">
-                    <div className="flex items-start gap-2.5 text-slate-600">
-                      <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center shrink-0 mt-0.5">
-                        <MapPin className="w-4 h-4 text-slate-400" />
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-sm font-bold text-slate-900">
-                          {item.district ? `${item.district}, ${item.city}` : 'Nepal'}
-                        </span>
-                        <span className="text-xs text-slate-500 line-clamp-1">
-                          {item.type === 'lost' 
-                            ? (item.lostLocationDescription || 'Location not specified')
-                            : (item.foundLocationDescription || 'Location not specified')}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2.5 text-slate-600">
-                      <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center shrink-0">
-                        <Clock className="w-4 h-4 text-slate-400" />
-                      </div>
-                      <span className="text-sm font-medium">
-                        {item.timeFrom && format(new Date(item.timeFrom), 'MMM d, yyyy')}
+                  {/* Bottom Badge (Reward) */}
+                  {item.estimatedValue && (
+                    <div className="absolute bottom-3 right-3">
+                      <span className="bg-brand-orange text-white px-3 py-1 rounded-full text-xs font-bold shadow-sm flex items-center gap-1.5">
+                        <Gift className="w-3 h-3" /> NPR {item.estimatedValue}
                       </span>
                     </div>
-                    {(item.color || item.secondaryColor || item.name || item.itemCondition || item.estimatedValue) && (
-                      <div className="flex flex-wrap gap-2 pt-2">
-                        {item.color && (
-                          <span className="px-2.5 py-1 bg-slate-100 text-slate-600 rounded-md text-xs font-medium">
-                            Color: {item.color}
-                          </span>
-                        )}
-                        {item.secondaryColor && (
-                          <span className="px-2.5 py-1 bg-slate-100 text-slate-600 rounded-md text-xs font-medium">
-                            Sec. Color: {item.secondaryColor}
-                          </span>
-                        )}
-                        {item.name && (
-                          <span className="px-2.5 py-1 bg-slate-100 text-slate-600 rounded-md text-xs font-medium">
-                            Name: {item.name}
-                          </span>
-                        )}
-                        {item.itemCondition && (
-                          <span className="px-2.5 py-1 bg-slate-100 text-slate-600 rounded-md text-xs font-medium capitalize">
-                            Condition: {item.itemCondition}
-                          </span>
-                        )}
-                        {item.estimatedValue && (
-                          <span className="px-2.5 py-1 bg-slate-100 text-slate-600 rounded-md text-xs font-medium">
-                            Value: NPR {item.estimatedValue}
-                          </span>
-                        )}
-                      </div>
-                    )}
-                  </div>
-
-                  {user && user.uid === item.userId && (
-                    <Link
-                      to={`/edit-item/${item.id}`}
-                      className="mt-4 w-full py-3 bg-slate-50 text-slate-600 rounded-xl font-bold text-sm hover:bg-brand-orange hover:text-white transition-all flex items-center justify-center gap-2"
-                    >
-                      <Edit className="w-4 h-4" /> Edit Report
-                    </Link>
                   )}
                 </div>
-              </div>
+
+                <div className="p-5 flex flex-col flex-grow justify-between">
+                  <div className="space-y-3">
+                    <h3 className="text-lg font-bold text-slate-900 line-clamp-1 group-hover:text-brand-orange transition-colors">
+                      {item.brand ? `${item.brand} ${item.model || ''}` : item.name || item.category}
+                    </h3>
+                    
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2 text-slate-500 text-sm">
+                        <MapPin className="w-4 h-4 shrink-0 text-brand-orange" />
+                        <span className="line-clamp-1">
+                          {item.district ? `${item.district} → ${item.city}` : 'Nepal'}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 text-slate-500 text-sm">
+                        <Calendar className="w-4 h-4 shrink-0" />
+                        <span>
+                          {item.timeFrom && format(new Date(item.timeFrom), 'MMM d, yyyy')}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </Link>
             ))}
           </div>
         )}

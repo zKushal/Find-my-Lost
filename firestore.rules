@@ -137,33 +137,33 @@ service cloud.firestore {
              data.userId is string && data.userId.size() > 0 && data.userId.size() < 100 &&
              data.type in ['lost', 'found'] &&
              data.category in ['electronics', 'wallet', 'documents', 'person', 'keys', 'clothing', 'jewelry', 'pets', 'bags', 'other'] &&
-             (!('brand' in data) || data.brand == null || (data.brand is string && data.brand.size() < 100)) &&
-             (!('model' in data) || data.model == null || (data.model is string && data.model.size() < 100)) &&
-             (!('color' in data) || data.color == null || (data.color is string && data.color.size() < 50)) &&
-             (!('secondaryColor' in data) || data.secondaryColor == null || (data.secondaryColor is string && data.secondaryColor.size() < 50)) &&
-             (!('serialNumber' in data) || data.serialNumber == null || (data.serialNumber is string && data.serialNumber.size() < 100)) &&
+             (!('brand' in data) || data.brand == null || (data.brand is string && data.brand.size() <= 100)) &&
+             (!('model' in data) || data.model == null || (data.model is string && data.model.size() <= 100)) &&
+             (!('color' in data) || data.color == null || (data.color is string && data.color.size() <= 50)) &&
+             (!('secondaryColor' in data) || data.secondaryColor == null || (data.secondaryColor is string && data.secondaryColor.size() <= 50)) &&
+             (!('serialNumber' in data) || data.serialNumber == null || (data.serialNumber is string && data.serialNumber.size() <= 100)) &&
              (!('reward' in data) || data.reward == null || data.reward is number) &&
-             (!('contactNumber' in data) || data.contactNumber == null || (data.contactNumber is string && data.contactNumber.size() < 20)) &&
-             data.description is string && data.description.size() > 0 && data.description.size() < 5000 &&
+             (!('contactNumber' in data) || data.contactNumber == null || (data.contactNumber is string && data.contactNumber.size() <= 20)) &&
+             data.description is string && data.description.size() > 0 && data.description.size() <= 5000 &&
              data.locationFromLat is number &&
              data.locationFromLng is number &&
              (!('locationToLat' in data) || data.locationToLat == null || data.locationToLat is number) &&
              (!('locationToLng' in data) || data.locationToLng == null || data.locationToLng is number) &&
-             (!('lostLocationDescription' in data) || data.lostLocationDescription == null || (data.lostLocationDescription is string && data.lostLocationDescription.size() < 500)) &&
-             (!('foundLocationDescription' in data) || data.foundLocationDescription == null || (data.foundLocationDescription is string && data.foundLocationDescription.size() < 500)) &&
-             (!('itemCondition' in data) || data.itemCondition == null || (data.itemCondition is string && data.itemCondition.size() < 100)) &&
-             (!('distinguishingFeatures' in data) || data.distinguishingFeatures == null || (data.distinguishingFeatures is string && data.distinguishingFeatures.size() < 1000)) &&
-             (!('estimatedValue' in data) || data.estimatedValue == null || (data.estimatedValue is string && data.estimatedValue.size() < 100)) &&
+             (!('lostLocationDescription' in data) || data.lostLocationDescription == null || (data.lostLocationDescription is string && data.lostLocationDescription.size() <= 500)) &&
+             (!('foundLocationDescription' in data) || data.foundLocationDescription == null || (data.foundLocationDescription is string && data.foundLocationDescription.size() <= 500)) &&
+             (!('itemCondition' in data) || data.itemCondition == null || (data.itemCondition is string && data.itemCondition.size() <= 100)) &&
+             (!('distinguishingFeatures' in data) || data.distinguishingFeatures == null || (data.distinguishingFeatures is string && data.distinguishingFeatures.size() <= 1000)) &&
+             (!('estimatedValue' in data) || data.estimatedValue == null || (data.estimatedValue is string && data.estimatedValue.size() <= 100) || data.estimatedValue is number) &&
              (!('policeReportFiled' in data) || data.policeReportFiled == null || data.policeReportFiled is bool) &&
-             (!('policeReportNumber' in data) || data.policeReportNumber == null || (data.policeReportNumber is string && data.policeReportNumber.size() < 100)) &&
-             (!('name' in data) || data.name == null || (data.name is string && data.name.size() < 100)) &&
-             (!('district' in data) || data.district == null || (data.district is string && data.district.size() < 100)) &&
-             (!('city' in data) || data.city == null || (data.city is string && data.city.size() < 100)) &&
-             data.timeFrom is string && data.timeFrom.size() > 0 && data.timeFrom.size() < 50 &&
-             (!('timeTo' in data) || data.timeTo == null || (data.timeTo is string && data.timeTo.size() > 0 && data.timeTo.size() < 50)) &&
-             (!('photoData' in data) || data.photoData == null || (data.photoData is string && data.photoData.size() < 1048576)) && // Max 1MB
-             (!('videoData' in data) || data.videoData == null || (data.videoData is string && data.videoData.size() < 1048576)) && // Max 1MB
-             data.status in ['pending', 'approved', 'rejected', 'matched'] &&
+             (!('policeReportNumber' in data) || data.policeReportNumber == null || (data.policeReportNumber is string && data.policeReportNumber.size() <= 100)) &&
+             (!('name' in data) || data.name == null || (data.name is string && data.name.size() <= 100)) &&
+             (!('district' in data) || data.district == null || (data.district is string && data.district.size() <= 100)) &&
+             (!('city' in data) || data.city == null || (data.city is string && data.city.size() <= 100)) &&
+             data.timeFrom is string && data.timeFrom.size() > 0 && data.timeFrom.size() <= 50 &&
+             (!('timeTo' in data) || data.timeTo == null || (data.timeTo is string && data.timeTo.size() > 0 && data.timeTo.size() <= 50)) &&
+             (!('photoData' in data) || data.photoData == null || (data.photoData is string && data.photoData.size() <= 10000000)) && // Max 10MB
+             (!('videoData' in data) || data.videoData == null || (data.videoData is string && data.videoData.size() <= 10000000)) && // Max 10MB
+             data.status in ['pending', 'approved', 'rejected', 'matched', 'resolved'] &&
              data.createdAt is timestamp &&
              (!('updatedAt' in data) || data.updatedAt == null || data.updatedAt is timestamp);
     }
@@ -205,7 +205,7 @@ service cloud.firestore {
 
     match /items/{itemId} {
       // Anyone can read approved items, admins can read all, owners can read their own
-      allow read: if resource.data.status == 'approved' || isAdmin() || isDocOwner();
+      allow read: if resource.data.status == 'approved' || resource.data.status == 'resolved' || isAdmin() || isDocOwner();
       
       // Users can create items, but they must be 'pending' unless created by an admin
       allow create: if isAuthenticated() && isValidItem(request.resource.data) && 
@@ -216,7 +216,7 @@ service cloud.firestore {
       // Owners can update their items but cannot change status from pending to approved
       allow update: if isAuthenticated() && isValidItem(request.resource.data) && uidNotModified() &&
                     (isAdmin() || 
-                     (isDocOwner() && request.resource.data.status == resource.data.status));
+                     (isDocOwner() && (request.resource.data.status == resource.data.status || request.resource.data.status == 'resolved' || request.resource.data.status == 'matched')));
       
       allow delete: if isAdmin() || isDocOwner();
     }

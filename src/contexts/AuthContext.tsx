@@ -42,14 +42,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const docSnap = await getDoc(docRef);
         
         if (docSnap.exists()) {
-          setProfile(docSnap.data() as UserProfile);
+          const data = docSnap.data() as UserProfile;
+          // Auto-upgrade the main user to admin if they aren't already
+          if (firebaseUser.email === 'kushalbhandari803@gmail.com' && data.role !== 'admin') {
+            data.role = 'admin';
+            try {
+              await setDoc(docRef, { role: 'admin' }, { merge: true });
+            } catch (e) {
+              console.error("Failed to upgrade user to admin", e);
+            }
+          }
+          setProfile(data);
         } else {
           // Create new user profile
           const newProfile: UserProfile = {
             uid: firebaseUser.uid,
             email: firebaseUser.email || '',
             name: firebaseUser.displayName || 'Anonymous User',
-            role: 'user',
+            role: firebaseUser.email === 'kushalbhandari803@gmail.com' ? 'admin' : 'user',
             createdAt: serverTimestamp()
           };
           

@@ -11,8 +11,8 @@ import { handleFirestoreError, OperationType } from '../utils/firestoreErrorHand
 import { GoogleGenAI } from '@google/genai';
 import MapSearch from '../components/MapSearch';
 import LocationMarker from '../components/LocationMarker';
-import MapController from '../components/MapController';
 import LocationSelector from '../components/LocationSelector';
+import MapController from '../components/MapController';
 
 // Fix leaflet icon issue
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -41,7 +41,6 @@ export default function ReportFound() {
   const [model, setModel] = useState('');
   const [color, setColor] = useState('');
   const [secondaryColor, setSecondaryColor] = useState('');
-  const [contactNumber, setContactNumber] = useState('');
   const [description, setDescription] = useState('');
   const [foundLocationDescription, setFoundLocationDescription] = useState('');
   const [policeReportFiled, setPoliceReportFiled] = useState(false);
@@ -69,8 +68,18 @@ export default function ReportFound() {
   const [collarColor, setCollarColor] = useState('');
   const [contents, setContents] = useState('');
   const [jewelryWeight, setJewelryWeight] = useState('');
-  const [itemCondition, setItemCondition] = useState('good');
-  const [distinguishingFeatures, setDistinguishingFeatures] = useState('');
+  const [numberOfKeys, setNumberOfKeys] = useState('');
+  const [keyType, setKeyType] = useState('');
+  const [keychain, setKeychain] = useState('');
+  const [itemName, setItemName] = useState('');
+  const [vehicleType, setVehicleType] = useState('');
+  const [licensePlate, setLicensePlate] = useState('');
+  const [vin, setVin] = useState('');
+  const [instrumentType, setInstrumentType] = useState('');
+  const [serialNumber, setSerialNumber] = useState('');
+  const [eyewearType, setEyewearType] = useState('');
+  const [frameColor, setFrameColor] = useState('');
+  const [lensColor, setLensColor] = useState('');
   const [district, setDistrict] = useState('');
   const [city, setCity] = useState('');
 
@@ -136,35 +145,96 @@ export default function ReportFound() {
         locationFromLng: locationFrom.lng,
         district,
         city,
-        status: 'approved',
-        createdAt: serverTimestamp(),
-        itemCondition,
-        distinguishingFeatures
+        status: 'pending',
+        createdAt: serverTimestamp()
       };
 
-      if (brand) itemData.brand = brand;
-      if (model) itemData.model = model;
-      if (color) itemData.color = color;
       if (secondaryColor) itemData.secondaryColor = secondaryColor;
-      if (contactNumber) itemData.contactNumber = contactNumber;
-      if (name) itemData.name = name;
-      if (age) itemData.age = age;
-      if (gender) itemData.gender = gender;
-      if (breed) itemData.breed = breed;
-      if (size) itemData.size = size;
-      if (material) itemData.material = material;
-      if (documentType) itemData.documentType = documentType;
-      
-      if (os) itemData.os = os;
-      if (storage) itemData.storage = storage;
-      if (height) itemData.height = height;
-      if (lastSeenWearing) itemData.lastSeenWearing = lastSeenWearing;
-      if (microchipId) itemData.microchipId = microchipId;
-      if (collarColor) itemData.collarColor = collarColor;
-      if (contents) itemData.contents = contents;
-      if (jewelryWeight) itemData.jewelryWeight = jewelryWeight;
       itemData.policeReportFiled = policeReportFiled;
       if (policeReportFiled && policeReportNumber) itemData.policeReportNumber = policeReportNumber;
+
+      switch (category) {
+        case 'electronics':
+          if (brand) itemData.brand = brand;
+          if (model) itemData.model = model;
+          if (color) itemData.color = color;
+          if (os) itemData.os = os;
+          if (storage) itemData.storage = storage;
+          break;
+        case 'bags':
+          if (brand) itemData.brand = brand;
+          if (color) itemData.color = color;
+          if (size) itemData.size = size;
+          if (contents) itemData.contents = contents;
+          break;
+        case 'person':
+          if (name) itemData.name = name;
+          if (age) itemData.age = age;
+          if (gender) itemData.gender = gender;
+          if (height) itemData.height = height;
+          if (lastSeenWearing) itemData.lastSeenWearing = lastSeenWearing;
+          break;
+        case 'pets':
+          if (name) itemData.name = name;
+          if (breed) itemData.breed = breed;
+          if (color) itemData.color = color;
+          if (microchipId) itemData.microchipId = microchipId;
+          if (collarColor) itemData.collarColor = collarColor;
+          break;
+        case 'clothing':
+          if (brand) itemData.brand = brand;
+          if (size) itemData.size = size;
+          if (color) itemData.color = color;
+          break;
+        case 'wallet':
+          if (documentType) itemData.documentType = documentType;
+          if (name) itemData.name = name;
+          if (color) itemData.color = color;
+          if (contents) itemData.contents = contents;
+          break;
+        case 'jewelry':
+          if (brand) itemData.brand = brand;
+          if (material) itemData.material = material;
+          if (color) itemData.color = color;
+          if (jewelryWeight) itemData.jewelryWeight = jewelryWeight;
+          break;
+        case 'keys':
+          if (numberOfKeys) itemData.numberOfKeys = numberOfKeys;
+          if (keyType) itemData.keyType = keyType;
+          if (keychain) itemData.keychain = keychain;
+          if (color) itemData.color = color;
+          break;
+        case 'vehicles':
+          if (vehicleType) itemData.vehicleType = vehicleType;
+          if (brand) itemData.brand = brand;
+          if (model) itemData.model = model;
+          if (color) itemData.color = color;
+          if (licensePlate) itemData.licensePlate = licensePlate;
+          if (vin) itemData.vin = vin;
+          break;
+        case 'musical_instruments':
+          if (instrumentType) itemData.instrumentType = instrumentType;
+          if (brand) itemData.brand = brand;
+          if (model) itemData.model = model;
+          if (color) itemData.color = color;
+          if (serialNumber) itemData.serialNumber = serialNumber;
+          break;
+        case 'glasses':
+          if (eyewearType) itemData.eyewearType = eyewearType;
+          if (brand) itemData.brand = brand;
+          if (frameColor) itemData.frameColor = frameColor;
+          if (lensColor) itemData.lensColor = lensColor;
+          break;
+        case 'other':
+          if (itemName) itemData.itemName = itemName;
+          if (color) itemData.color = color;
+          if (brand) itemData.brand = brand;
+          break;
+        default:
+          if (brand) itemData.brand = brand;
+          if (color) itemData.color = color;
+          break;
+      }
 
       if (photoData) itemData.photoData = photoData;
       if (videoData) itemData.videoData = videoData;
@@ -364,6 +434,137 @@ export default function ReportFound() {
             </div>
           </div>
         );
+      case 'keys':
+        return (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-slate-700">Number of Keys</label>
+                <input type="text" className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none transition-all bg-slate-50" placeholder="e.g. 3" value={numberOfKeys} onChange={(e) => setNumberOfKeys(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-slate-700">Key Type</label>
+                <input type="text" className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none transition-all bg-slate-50" placeholder="e.g. Car, House, Office" value={keyType} onChange={(e) => setKeyType(e.target.value)} />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-slate-700">Keychain Description</label>
+                <input type="text" className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none transition-all bg-slate-50" placeholder="e.g. Red leather tag, Mickey Mouse" value={keychain} onChange={(e) => setKeychain(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-slate-700">Color</label>
+                <input type="text" className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none transition-all bg-slate-50" placeholder="e.g. Silver, Brass" value={color} onChange={(e) => setColor(e.target.value)} />
+              </div>
+            </div>
+          </div>
+        );
+      case 'vehicles':
+        return (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-slate-700">Vehicle Type</label>
+                <input type="text" className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none transition-all bg-slate-50" placeholder="e.g. Bicycle, Motorcycle, Car" value={vehicleType} onChange={(e) => setVehicleType(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-slate-700">Make / Brand</label>
+                <input type="text" className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none transition-all bg-slate-50" placeholder="e.g. Honda, Trek" value={brand} onChange={(e) => setBrand(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-slate-700">Model / Year</label>
+                <input type="text" className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none transition-all bg-slate-50" placeholder="e.g. Civic 2020" value={model} onChange={(e) => setModel(e.target.value)} />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-slate-700">Color</label>
+                <input type="text" className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none transition-all bg-slate-50" placeholder="e.g. Red" value={color} onChange={(e) => setColor(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-slate-700">License Plate (If any)</label>
+                <input type="text" className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none transition-all bg-slate-50" placeholder="e.g. BA 1 PA 1234" value={licensePlate} onChange={(e) => setLicensePlate(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-slate-700">VIN / Chassis No. (Optional)</label>
+                <input type="text" className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none transition-all bg-slate-50" placeholder="e.g. 1HGCM8..." value={vin} onChange={(e) => setVin(e.target.value)} />
+              </div>
+            </div>
+          </div>
+        );
+      case 'musical_instruments':
+        return (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-slate-700">Instrument Type</label>
+                <input type="text" className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none transition-all bg-slate-50" placeholder="e.g. Guitar, Keyboard" value={instrumentType} onChange={(e) => setInstrumentType(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-slate-700">Brand</label>
+                <input type="text" className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none transition-all bg-slate-50" placeholder="e.g. Yamaha, Fender" value={brand} onChange={(e) => setBrand(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-slate-700">Model</label>
+                <input type="text" className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none transition-all bg-slate-50" placeholder="e.g. Stratocaster" value={model} onChange={(e) => setModel(e.target.value)} />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-slate-700">Color</label>
+                <input type="text" className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none transition-all bg-slate-50" placeholder="e.g. Sunburst, Black" value={color} onChange={(e) => setColor(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-slate-700">Serial Number (Optional)</label>
+                <input type="text" className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none transition-all bg-slate-50" placeholder="e.g. US190..." value={serialNumber} onChange={(e) => setSerialNumber(e.target.value)} />
+              </div>
+            </div>
+          </div>
+        );
+      case 'glasses':
+        return (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-slate-700">Eyewear Type</label>
+                <input type="text" className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none transition-all bg-slate-50" placeholder="e.g. Sunglasses, Prescription Glasses" value={eyewearType} onChange={(e) => setEyewearType(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-slate-700">Brand</label>
+                <input type="text" className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none transition-all bg-slate-50" placeholder="e.g. Ray-Ban, Oakley" value={brand} onChange={(e) => setBrand(e.target.value)} />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-slate-700">Frame Color</label>
+                <input type="text" className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none transition-all bg-slate-50" placeholder="e.g. Tortoise, Black" value={frameColor} onChange={(e) => setFrameColor(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-slate-700">Lens Color</label>
+                <input type="text" className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none transition-all bg-slate-50" placeholder="e.g. Clear, Dark Green" value={lensColor} onChange={(e) => setLensColor(e.target.value)} />
+              </div>
+            </div>
+          </div>
+        );
+      case 'other':
+        return (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-slate-700">Item Name</label>
+                <input type="text" className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none transition-all bg-slate-50" placeholder="e.g. Umbrella, Water Bottle" value={itemName} onChange={(e) => setItemName(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-slate-700">Brand / Make (Optional)</label>
+                <input type="text" className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none transition-all bg-slate-50" placeholder="e.g. Hydro Flask" value={brand} onChange={(e) => setBrand(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-slate-700">Color</label>
+                <input type="text" className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none transition-all bg-slate-50" placeholder="e.g. Black" value={color} onChange={(e) => setColor(e.target.value)} />
+              </div>
+            </div>
+          </div>
+        );
       default:
         return (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -423,8 +624,14 @@ export default function ReportFound() {
           Collar Color: ${lostItem.collarColor || 'N/A'}
           Contents: ${lostItem.contents || 'N/A'}
           Jewelry Weight: ${lostItem.jewelryWeight || 'N/A'}
-          Condition: ${lostItem.itemCondition || 'N/A'}
-          Distinguishing Features: ${lostItem.distinguishingFeatures || 'N/A'}
+          Vehicle Type: ${lostItem.vehicleType || 'N/A'}
+          License Plate: ${lostItem.licensePlate || 'N/A'}
+          VIN: ${lostItem.vin || 'N/A'}
+          Instrument Type: ${lostItem.instrumentType || 'N/A'}
+          Serial Number: ${lostItem.serialNumber || 'N/A'}
+          Eyewear Type: ${lostItem.eyewearType || 'N/A'}
+          Frame Color: ${lostItem.frameColor || 'N/A'}
+          Lens Color: ${lostItem.lensColor || 'N/A'}
           Description: ${lostItem.description}
           District: ${lostItem.district || 'N/A'}
           City: ${lostItem.city || 'N/A'}
@@ -452,8 +659,14 @@ export default function ReportFound() {
           Collar Color: ${foundItem.collarColor || 'N/A'}
           Contents: ${foundItem.contents || 'N/A'}
           Jewelry Weight: ${foundItem.jewelryWeight || 'N/A'}
-          Condition: ${foundItem.itemCondition || 'N/A'}
-          Distinguishing Features: ${foundItem.distinguishingFeatures || 'N/A'}
+          Vehicle Type: ${foundItem.vehicleType || 'N/A'}
+          License Plate: ${foundItem.licensePlate || 'N/A'}
+          VIN: ${foundItem.vin || 'N/A'}
+          Instrument Type: ${foundItem.instrumentType || 'N/A'}
+          Serial Number: ${foundItem.serialNumber || 'N/A'}
+          Eyewear Type: ${foundItem.eyewearType || 'N/A'}
+          Frame Color: ${foundItem.frameColor || 'N/A'}
+          Lens Color: ${foundItem.lensColor || 'N/A'}
           Description: ${foundItem.description}
           District: ${foundItem.district || 'N/A'}
           City: ${foundItem.city || 'N/A'}
@@ -584,6 +797,9 @@ export default function ReportFound() {
                     <option value="jewelry">Jewelry</option>
                     <option value="pets">Pets</option>
                     <option value="bags">Bags / Backpacks</option>
+                    <option value="vehicles">Vehicles (Bicycle, Car, etc.)</option>
+                    <option value="musical_instruments">Musical Instruments</option>
+                    <option value="glasses">Eyewear / Glasses</option>
                     <option value="other">Other</option>
                   </select>
                 </div>
@@ -626,38 +842,6 @@ export default function ReportFound() {
               </div>
 
               {renderDynamicFields()}
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="space-y-2">
-                  <label className="text-sm font-bold text-slate-700">Item Condition</label>
-                  <select className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none transition-all bg-slate-50" value={itemCondition} onChange={(e) => setItemCondition(e.target.value)}>
-                    <option value="new">New / Like New</option>
-                    <option value="good">Good</option>
-                    <option value="fair">Fair</option>
-                    <option value="poor">Poor / Damaged</option>
-                  </select>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-bold text-slate-700">Distinguishing Features</label>
-                  <input
-                    type="text"
-                    className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none transition-all bg-slate-50"
-                    placeholder="e.g. Scratches on back, stickers"
-                    value={distinguishingFeatures}
-                    onChange={(e) => setDistinguishingFeatures(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-bold text-slate-700">Alt Contact Number</label>
-                  <input
-                    type="tel"
-                    className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none transition-all bg-slate-50"
-                    placeholder="e.g. 9800000000"
-                    value={contactNumber}
-                    onChange={(e) => setContactNumber(e.target.value)}
-                  />
-                </div>
-              </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="space-y-2">
@@ -745,10 +929,9 @@ export default function ReportFound() {
 
                 <div className="space-y-2">
                   <label className="text-sm font-bold text-slate-700">Location Description</label>
-                  <input
-                    type="text"
-                    className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none transition-all bg-slate-50"
-                    placeholder="e.g. Near the main gate of the park"
+                  <textarea
+                    className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none transition-all bg-slate-50 min-h-[100px] resize-y"
+                    placeholder="e.g. Near the main gate of the park, under the big oak tree"
                     value={foundLocationDescription}
                     onChange={(e) => setFoundLocationDescription(e.target.value)}
                   />

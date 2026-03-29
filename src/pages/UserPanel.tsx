@@ -9,14 +9,18 @@ import { handleFirestoreError, OperationType } from '../utils/firestoreErrorHand
 import { 
   User, Shield, Search, Tag, Bell, AlertTriangle, 
   Camera, CheckCircle, Copy, AlertCircle, Key, 
-  LogOut, ChevronRight, MapPin, Calendar, Clock
+  LogOut, ChevronRight, MapPin, Calendar, Clock, Edit
 } from 'lucide-react';
 
-export default function Profile() {
+export default function UserPanel() {
   const { user, profile } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('profile');
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    document.title = 'User Panel | KhojTalas';
+  }, []);
 
   // Profile Info State
   const [name, setName] = useState('');
@@ -338,12 +342,26 @@ export default function Profile() {
     toast.success('Session revoked successfully');
   };
 
+  const handleUpdateStatus = async (itemId: string, newStatus: string) => {
+    if (!user) return;
+    try {
+      await updateDoc(doc(db, 'items', itemId), {
+        status: newStatus
+      });
+      toast.success('Item status updated successfully');
+      fetchUserItems();
+    } catch (error: any) {
+      handleFirestoreError(error, OperationType.UPDATE, `items/${itemId}`);
+      toast.error('Failed to update item status');
+    }
+  };
+
   const isEmailAuth = getProviderName() === 'Email';
   const strength = getPasswordStrength(newPassword);
 
   const renderItemCard = (item: any) => (
-    <Link to={`/item/${item.id}`} key={item.id} className="bg-white border border-slate-200 rounded-2xl overflow-hidden hover:shadow-lg transition-all group flex flex-col sm:flex-row">
-      <div className="w-full sm:w-48 h-48 sm:h-auto shrink-0 overflow-hidden bg-slate-100">
+    <div key={item.id} className="bg-white border border-slate-200 rounded-2xl overflow-hidden hover:shadow-lg transition-all group flex flex-col sm:flex-row relative">
+      <Link to={`/item/${item.id}`} className="w-full sm:w-48 h-48 sm:h-auto shrink-0 overflow-hidden bg-slate-100 block">
         {item.photoData ? (
           <img src={item.photoData} alt={item.category} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
         ) : (
@@ -351,7 +369,7 @@ export default function Profile() {
             <Search className="w-8 h-8" />
           </div>
         )}
-      </div>
+      </Link>
       <div className="p-6 flex flex-col justify-between flex-1">
         <div className="space-y-2">
           <div className="flex items-center justify-between gap-4">
@@ -367,23 +385,46 @@ export default function Profile() {
               {item.status || 'Pending'}
             </span>
           </div>
-          <h3 className="text-lg font-bold text-slate-900 line-clamp-1">
-            {item.brand} {item.model} {item.category}
-          </h3>
-          <p className="text-slate-500 text-sm line-clamp-2">{item.description}</p>
+          <Link to={`/item/${item.id}`} className="block">
+            <h3 className="text-lg font-bold text-slate-900 line-clamp-1 hover:text-brand-orange transition-colors">
+              {item.brand} {item.model} {item.category}
+            </h3>
+            <p className="text-slate-500 text-sm line-clamp-2 mt-1">{item.description}</p>
+          </Link>
         </div>
         <div className="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between text-sm text-slate-500">
-          <div className="flex items-center gap-1">
-            <MapPin className="w-4 h-4" />
-            <span className="truncate max-w-[150px]">{item.lostLocationDescription || item.foundLocationDescription}</span>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-1">
+              <MapPin className="w-4 h-4" />
+              <span className="truncate max-w-[150px]">{item.lostLocationDescription || item.foundLocationDescription}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <Calendar className="w-4 h-4" />
+              <span>{item.createdAt?.toDate ? new Date(item.createdAt.toDate()).toLocaleDateString() : 'N/A'}</span>
+            </div>
           </div>
-          <div className="flex items-center gap-1">
-            <Calendar className="w-4 h-4" />
-            <span>{item.createdAt?.toDate ? new Date(item.createdAt.toDate()).toLocaleDateString() : 'N/A'}</span>
+          <div className="flex items-center gap-2">
+            {item.status !== 'resolved' && (
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleUpdateStatus(item.id, 'resolved');
+                }}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-green-50 hover:bg-green-500 hover:text-white text-green-700 rounded-lg transition-colors font-medium text-xs"
+              >
+                <CheckCircle className="w-3.5 h-3.5" /> Resolve
+              </button>
+            )}
+            <Link 
+              to={`/edit-item/${item.id}`}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-brand-orange hover:text-white text-slate-700 rounded-lg transition-colors font-medium text-xs"
+            >
+              <Edit className="w-3.5 h-3.5" /> Edit
+            </Link>
           </div>
         </div>
       </div>
-    </Link>
+    </div>
   );
 
   return (

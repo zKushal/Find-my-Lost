@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
+import { collection, query, orderBy, onSnapshot, where } from 'firebase/firestore';
 import { db } from '../firebase';
 import { format } from 'date-fns';
 import { Search, MapPin, Calendar, Tag, Filter, ArrowRight, Package, AlertCircle, Clock, ChevronRight } from 'lucide-react';
@@ -32,7 +32,11 @@ export default function Browse() {
   const searchQuery = searchParams.get('q') || '';
 
   useEffect(() => {
-    const q = query(collection(db, 'items'), orderBy('createdAt', 'desc'));
+    const q = query(
+      collection(db, 'items'),
+      where('status', '==', 'approved'),
+      orderBy('createdAt', 'desc')
+    );
     
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const itemsData = snapshot.docs.map(doc => ({
@@ -72,6 +76,9 @@ export default function Browse() {
     { id: 'jewelry', name: 'Jewelry', icon: Tag },
     { id: 'pets', name: 'Pets', icon: AlertCircle },
     { id: 'bags', name: 'Bags', icon: Package },
+    { id: 'vehicles', name: 'Vehicles', icon: Package },
+    { id: 'musical_instruments', name: 'Instruments', icon: Tag },
+    { id: 'glasses', name: 'Glasses', icon: Tag },
     { id: 'other', name: 'Other', icon: Tag },
   ];
 

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'sonner';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
@@ -15,35 +15,58 @@ import ReportFound from './pages/ReportFound';
 import EditItem from './pages/EditItem';
 import Browse from './pages/Browse';
 import ItemDetails from './pages/ItemDetails';
-import AdminDashboard from './pages/AdminDashboard';
-import Profile from './pages/Profile';
+import UserPanel from './pages/UserPanel';
 import { AuthProvider } from './contexts/AuthContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
+
+import AdminLayout from './layouts/AdminLayout';
+import AdminDashboard from './pages/admin/AdminDashboard';
+import ReviewQueuePage from './pages/admin/ReviewQueuePage';
+import ApprovedItemsPage from './pages/admin/ApprovedItemsPage';
+import RejectedItemsPage from './pages/admin/RejectedItemsPage';
+import AdminUsersPage from './pages/admin/AdminUsersPage';
+import AdminItemDetailPage from './pages/admin/AdminItemDetailPage';
 
 export default function App() {
   return (
     <ErrorBoundary>
       <AuthProvider>
         <Router>
-          <div className="min-h-screen bg-gray-50 flex flex-col">
-            <Navbar />
-            <main className="flex-grow">
-              <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/register" element={<Register />} />
-                <Route path="/report-lost" element={<ReportLost />} />
-                <Route path="/report-found" element={<ReportFound />} />
-                <Route path="/edit-item/:id" element={<EditItem />} />
-                <Route path="/item/:id" element={<ItemDetails />} />
-                <Route path="/browse" element={<Browse />} />
-                <Route path="/admin" element={<AdminDashboard />} />
-                <Route path="/profile" element={<Profile />} />
-              </Routes>
-            </main>
-            <Footer />
-            <Toaster position="top-right" />
-          </div>
+          <Toaster position="top-right" />
+          <Routes>
+            <Route path="/admin" element={<AdminLayout />}>
+              <Route index element={<AdminDashboard />} />
+              <Route path="pending" element={<ReviewQueuePage />} />
+              <Route path="approved" element={<ApprovedItemsPage />} />
+              <Route path="rejected" element={<RejectedItemsPage />} />
+              <Route path="users" element={<AdminUsersPage />} />
+              <Route path="items/:id" element={<AdminItemDetailPage />} />
+            </Route>
+
+            <Route
+              path="/*"
+              element={
+                <div className="min-h-screen bg-gray-50 flex flex-col">
+                  <Navbar />
+                  <main className="flex-grow">
+                    <Routes>
+                      <Route path="/" element={<Home />} />
+                      <Route path="/login" element={<Login />} />
+                      <Route path="/register" element={<Register />} />
+                      <Route path="/report-lost" element={<ReportLost />} />
+                      <Route path="/report-found" element={<ReportFound />} />
+                      <Route path="/edit-item/:id" element={<EditItem />} />
+                      <Route path="/item/:id" element={<ItemDetails />} />
+                      <Route path="/browse" element={<Browse />} />
+                      <Route path="/user" element={<UserPanel />} />
+                      <Route path="/profile" element={<Navigate to="/user" replace />} />
+                    </Routes>
+                  </main>
+                  <Footer />
+                </div>
+              }
+            />
+          </Routes>
         </Router>
       </AuthProvider>
     </ErrorBoundary>

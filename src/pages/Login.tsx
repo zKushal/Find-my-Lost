@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { signInWithEmailAndPassword, signInWithPopup, getMultiFactorResolver, TotpMultiFactorGenerator, MultiFactorResolver } from 'firebase/auth';
-import { auth, googleProvider, githubProvider, facebookProvider } from '../firebase';
+import { doc, getDoc } from 'firebase/firestore';
+import { auth, db, googleProvider, githubProvider, facebookProvider } from '../firebase';
 import { handleFirestoreError, OperationType } from '../utils/firestoreErrorHandler';
 
 import { Search, LogIn, Mail, Lock, Github, Facebook, Key } from 'lucide-react';
@@ -30,9 +31,19 @@ export default function Login() {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      
+      // Check role
+      const docRef = doc(db, 'users', userCredential.user.uid);
+      const docSnap = await getDoc(docRef);
+      
       toast.success('Logged in successfully');
-      navigate('/');
+      
+      if (docSnap.exists() && docSnap.data().role === 'admin') {
+        navigate('/admin');
+      } else {
+        navigate('/');
+      }
     } catch (error: any) {
       handleAuthError(error);
     } finally {
@@ -59,9 +70,19 @@ export default function Login() {
 
   const handleProviderLogin = async (provider: any, providerName: string) => {
     try {
-      await signInWithPopup(auth, provider);
+      const userCredential = await signInWithPopup(auth, provider);
+      
+      // Check role
+      const docRef = doc(db, 'users', userCredential.user.uid);
+      const docSnap = await getDoc(docRef);
+      
       toast.success('Logged in successfully');
-      navigate('/');
+      
+      if (docSnap.exists() && docSnap.data().role === 'admin') {
+        navigate('/admin');
+      } else {
+        navigate('/');
+      }
     } catch (error: any) {
       handleAuthError(error);
     }

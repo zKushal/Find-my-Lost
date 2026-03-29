@@ -94,6 +94,18 @@ export default function EditItem() {
   const [collarColor, setCollarColor] = useState('');
   const [contents, setContents] = useState('');
   const [jewelryWeight, setJewelryWeight] = useState('');
+  const [numberOfKeys, setNumberOfKeys] = useState('');
+  const [keyType, setKeyType] = useState('');
+  const [keychain, setKeychain] = useState('');
+  const [itemName, setItemName] = useState('');
+  const [vehicleType, setVehicleType] = useState('');
+  const [licensePlate, setLicensePlate] = useState('');
+  const [vin, setVin] = useState('');
+  const [instrumentType, setInstrumentType] = useState('');
+  const [serialNumber, setSerialNumber] = useState('');
+  const [eyewearType, setEyewearType] = useState('');
+  const [frameColor, setFrameColor] = useState('');
+  const [lensColor, setLensColor] = useState('');
   const [itemCondition, setItemCondition] = useState('good');
   const [distinguishingFeatures, setDistinguishingFeatures] = useState('');
 
@@ -151,6 +163,18 @@ export default function EditItem() {
           setCollarColor(data.collarColor || '');
           setContents(data.contents || '');
           setJewelryWeight(data.jewelryWeight || '');
+          setNumberOfKeys(data.numberOfKeys || '');
+          setKeyType(data.keyType || '');
+          setKeychain(data.keychain || '');
+          setItemName(data.itemName || '');
+          setVehicleType(data.vehicleType || '');
+          setLicensePlate(data.licensePlate || '');
+          setVin(data.vin || '');
+          setInstrumentType(data.instrumentType || '');
+          setSerialNumber(data.serialNumber || '');
+          setEyewearType(data.eyewearType || '');
+          setFrameColor(data.frameColor || '');
+          setLensColor(data.lensColor || '');
           setItemCondition(data.itemCondition || 'good');
           setDistinguishingFeatures(data.distinguishingFeatures || '');
         } else {
@@ -213,9 +237,6 @@ export default function EditItem() {
 
       const itemData: any = {
         category,
-        brand,
-        model,
-        color,
         secondaryColor,
         contactNumber,
         description,
@@ -232,6 +253,89 @@ export default function EditItem() {
         policeReportNumber: policeReportFiled ? policeReportNumber : null
       };
 
+      switch (category) {
+        case 'electronics':
+          itemData.brand = brand || null;
+          itemData.model = model || null;
+          itemData.color = color || null;
+          itemData.os = os || null;
+          itemData.storage = storage || null;
+          break;
+        case 'bags':
+          itemData.brand = brand || null;
+          itemData.color = color || null;
+          itemData.size = size || null;
+          itemData.contents = contents || null;
+          break;
+        case 'person':
+          itemData.name = name || null;
+          itemData.age = age || null;
+          itemData.gender = gender || null;
+          itemData.height = height || null;
+          itemData.lastSeenWearing = lastSeenWearing || null;
+          break;
+        case 'pets':
+          itemData.name = name || null;
+          itemData.breed = breed || null;
+          itemData.color = color || null;
+          itemData.microchipId = microchipId || null;
+          itemData.collarColor = collarColor || null;
+          break;
+        case 'clothing':
+          itemData.brand = brand || null;
+          itemData.size = size || null;
+          itemData.color = color || null;
+          break;
+        case 'wallet':
+          itemData.documentType = documentType || null;
+          itemData.name = name || null;
+          itemData.color = color || null;
+          itemData.contents = contents || null;
+          break;
+        case 'jewelry':
+          itemData.brand = brand || null;
+          itemData.material = material || null;
+          itemData.color = color || null;
+          itemData.jewelryWeight = jewelryWeight || null;
+          break;
+        case 'keys':
+          itemData.numberOfKeys = numberOfKeys || null;
+          itemData.keyType = keyType || null;
+          itemData.keychain = keychain || null;
+          itemData.color = color || null;
+          break;
+        case 'vehicles':
+          itemData.vehicleType = vehicleType || null;
+          itemData.brand = brand || null;
+          itemData.model = model || null;
+          itemData.color = color || null;
+          itemData.licensePlate = licensePlate || null;
+          itemData.vin = vin || null;
+          break;
+        case 'musical_instruments':
+          itemData.instrumentType = instrumentType || null;
+          itemData.brand = brand || null;
+          itemData.model = model || null;
+          itemData.color = color || null;
+          itemData.serialNumber = serialNumber || null;
+          break;
+        case 'glasses':
+          itemData.eyewearType = eyewearType || null;
+          itemData.brand = brand || null;
+          itemData.frameColor = frameColor || null;
+          itemData.lensColor = lensColor || null;
+          break;
+        case 'other':
+          itemData.itemName = itemName || null;
+          itemData.color = color || null;
+          itemData.brand = brand || null;
+          break;
+        default:
+          itemData.brand = brand || null;
+          itemData.color = color || null;
+          break;
+      }
+
       if (timeTo) itemData.timeTo = timeTo;
       else itemData.timeTo = null;
 
@@ -245,23 +349,6 @@ export default function EditItem() {
 
       if (photoData) itemData.photoData = photoData;
       if (videoData) itemData.videoData = videoData;
-
-      // Dynamic fields
-      if (name) itemData.name = name; else itemData.name = null;
-      if (age) itemData.age = age; else itemData.age = null;
-      if (gender) itemData.gender = gender; else itemData.gender = null;
-      if (breed) itemData.breed = breed; else itemData.breed = null;
-      if (size) itemData.size = size; else itemData.size = null;
-      if (material) itemData.material = material; else itemData.material = null;
-      if (documentType) itemData.documentType = documentType; else itemData.documentType = null;
-      if (os) itemData.os = os; else itemData.os = null;
-      if (storage) itemData.storage = storage; else itemData.storage = null;
-      if (height) itemData.height = height; else itemData.height = null;
-      if (lastSeenWearing) itemData.lastSeenWearing = lastSeenWearing; else itemData.lastSeenWearing = null;
-      if (microchipId) itemData.microchipId = microchipId; else itemData.microchipId = null;
-      if (collarColor) itemData.collarColor = collarColor; else itemData.collarColor = null;
-      if (contents) itemData.contents = contents; else itemData.contents = null;
-      if (jewelryWeight) itemData.jewelryWeight = jewelryWeight; else itemData.jewelryWeight = null;
 
       await updateDoc(doc(db, 'items', id), itemData);
 
@@ -454,6 +541,137 @@ export default function EditItem() {
             </div>
           </div>
         );
+      case 'keys':
+        return (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-slate-700">Number of Keys</label>
+                <input type="text" className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none transition-all bg-white" placeholder="e.g. 3" value={numberOfKeys} onChange={(e) => setNumberOfKeys(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-slate-700">Key Type</label>
+                <input type="text" className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none transition-all bg-white" placeholder="e.g. Car, House, Office" value={keyType} onChange={(e) => setKeyType(e.target.value)} />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-slate-700">Keychain Description</label>
+                <input type="text" className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none transition-all bg-white" placeholder="e.g. Red leather tag, Mickey Mouse" value={keychain} onChange={(e) => setKeychain(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-slate-700">Color</label>
+                <input type="text" className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none transition-all bg-white" placeholder="e.g. Silver, Brass" value={color} onChange={(e) => setColor(e.target.value)} />
+              </div>
+            </div>
+          </div>
+        );
+      case 'vehicles':
+        return (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-slate-700">Vehicle Type</label>
+                <input type="text" className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none transition-all bg-white" placeholder="e.g. Bicycle, Motorcycle, Car" value={vehicleType} onChange={(e) => setVehicleType(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-slate-700">Make / Brand</label>
+                <input type="text" className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none transition-all bg-white" placeholder="e.g. Honda, Trek" value={brand} onChange={(e) => setBrand(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-slate-700">Model / Year</label>
+                <input type="text" className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none transition-all bg-white" placeholder="e.g. Civic 2020" value={model} onChange={(e) => setModel(e.target.value)} />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-slate-700">Color</label>
+                <input type="text" className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none transition-all bg-white" placeholder="e.g. Red" value={color} onChange={(e) => setColor(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-slate-700">License Plate (If any)</label>
+                <input type="text" className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none transition-all bg-white" placeholder="e.g. BA 1 PA 1234" value={licensePlate} onChange={(e) => setLicensePlate(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-slate-700">VIN / Chassis No. (Optional)</label>
+                <input type="text" className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none transition-all bg-white" placeholder="e.g. 1HGCM8..." value={vin} onChange={(e) => setVin(e.target.value)} />
+              </div>
+            </div>
+          </div>
+        );
+      case 'musical_instruments':
+        return (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-slate-700">Instrument Type</label>
+                <input type="text" className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none transition-all bg-white" placeholder="e.g. Guitar, Keyboard" value={instrumentType} onChange={(e) => setInstrumentType(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-slate-700">Brand</label>
+                <input type="text" className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none transition-all bg-white" placeholder="e.g. Yamaha, Fender" value={brand} onChange={(e) => setBrand(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-slate-700">Model</label>
+                <input type="text" className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none transition-all bg-white" placeholder="e.g. Stratocaster" value={model} onChange={(e) => setModel(e.target.value)} />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-slate-700">Color</label>
+                <input type="text" className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none transition-all bg-white" placeholder="e.g. Sunburst, Black" value={color} onChange={(e) => setColor(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-slate-700">Serial Number (Optional)</label>
+                <input type="text" className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none transition-all bg-white" placeholder="e.g. US190..." value={serialNumber} onChange={(e) => setSerialNumber(e.target.value)} />
+              </div>
+            </div>
+          </div>
+        );
+      case 'glasses':
+        return (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-slate-700">Eyewear Type</label>
+                <input type="text" className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none transition-all bg-white" placeholder="e.g. Sunglasses, Prescription Glasses" value={eyewearType} onChange={(e) => setEyewearType(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-slate-700">Brand</label>
+                <input type="text" className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none transition-all bg-white" placeholder="e.g. Ray-Ban, Oakley" value={brand} onChange={(e) => setBrand(e.target.value)} />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-slate-700">Frame Color</label>
+                <input type="text" className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none transition-all bg-white" placeholder="e.g. Tortoise, Black" value={frameColor} onChange={(e) => setFrameColor(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-slate-700">Lens Color</label>
+                <input type="text" className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none transition-all bg-white" placeholder="e.g. Clear, Dark Green" value={lensColor} onChange={(e) => setLensColor(e.target.value)} />
+              </div>
+            </div>
+          </div>
+        );
+      case 'other':
+        return (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-slate-700">Item Name</label>
+                <input type="text" className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none transition-all bg-white" placeholder="e.g. Umbrella, Water Bottle" value={itemName} onChange={(e) => setItemName(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-slate-700">Brand / Make (Optional)</label>
+                <input type="text" className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none transition-all bg-white" placeholder="e.g. Hydro Flask" value={brand} onChange={(e) => setBrand(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-slate-700">Color</label>
+                <input type="text" className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none transition-all bg-white" placeholder="e.g. Black" value={color} onChange={(e) => setColor(e.target.value)} />
+              </div>
+            </div>
+          </div>
+        );
       default:
         return (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -522,6 +740,9 @@ export default function EditItem() {
                 <option value="jewelry">Jewelry</option>
                 <option value="pets">Pets</option>
                 <option value="bags">Bags / Backpacks</option>
+                <option value="vehicles">Vehicles (Bicycle, Car, etc.)</option>
+                <option value="musical_instruments">Musical Instruments</option>
+                <option value="glasses">Eyewear / Glasses</option>
                 <option value="other">Other</option>
               </select>
             </div>
@@ -602,7 +823,7 @@ export default function EditItem() {
             {itemType === 'lost' && (
               <>
                 <div className="space-y-2">
-                  <label className="text-sm font-bold text-slate-700">Estimated Value (NPR)</label>
+                  <label className="text-sm font-bold text-slate-700">Reward (NPR)</label>
                   <input
                     type="number"
                     className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none transition-all bg-white"
@@ -712,9 +933,8 @@ export default function EditItem() {
           <div className="space-y-4">
             <div className="space-y-2">
               <label className="text-sm font-bold text-slate-700">Location Description</label>
-              <input
-                type="text"
-                className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none transition-all bg-slate-50"
+              <textarea
+                className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-orange/20 focus:border-brand-orange outline-none transition-all bg-slate-50 min-h-[100px] resize-y"
                 placeholder="e.g. Near the main gate of the park"
                 value={itemType === 'found' ? foundLocationDescription : lostLocationDescription}
                 onChange={(e) => itemType === 'found' ? setFoundLocationDescription(e.target.value) : setLostLocationDescription(e.target.value)}
